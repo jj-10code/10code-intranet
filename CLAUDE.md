@@ -1,17 +1,38 @@
 # 10Code Intranet - Reglas de Desarrollo para Agentes IA
-# Sistema de Gestión de Proyectos Integral
-# Stack: Django 5 + Inertia.js + React + PostgreSQL + ML
+
+## Sistema de herramientas para el control productivo de 10Code
+
+### Arquitectura de la Intranet
+
+La intranet funcionará como una suite de herramientas internas para 10code, incluyendo como ejemplos:
+
+* SSO con Google Auth (restringido a `10code.es`).
+* Gestión de equipo, capacidad y control horario (normativa 2026 para RRHH).
+* Gestión de ofertas y funnel de oportunidades (con ML/IA).
+* Gestión integral del ciclo de vida de proyectos y control de tiempos (tipo Jira o similar).
+* Cuadros de mando (KPIs de desempeño y financieros).
+
+## Stack: Django 5 + Inertia.js + React + PostgreSQL + ML
+
+* **Backend:** Django 5.2 (Monolito Modular Majestic)
+* **Frontend:** React + Vite + Inertia.js
+* **Gestor de Paquetes:** `uv` (con `pyproject.toml`)
+* **Base de Datos:** PostgreSQL
+* **Contenedores:** Docker Multi-stage
 
 ## 🎯 FILOSOFÍA ARQUITECTÓNICA CENTRAL
 
 ### Monolito Modular Majestuoso
+
 Este proyecto implementa un monolito modular donde:
-- Una sola base de código con módulos claramente separados por dominio (DDD)
-- Inertia.js como puente entre Django y React (SPA sin API REST tradicional)
-- Cada módulo (app Django) es autocontenido y representa un dominio de negocio
-- Evitamos microservicios prematuros en favor de velocidad de desarrollo
+
+* Una sola base de código con módulos claramente separados por dominio (DDD)
+* Inertia.js como puente entre Django y React (SPA sin API REST tradicional)
+* Cada módulo (app Django) es autocontenido y representa un dominio de negocio
+* Evitamos microservicios prematuros en favor de velocidad de desarrollo
 
 ### Principios No Negociables
+
 1. **Service Layer Pattern**: Toda lógica de negocio va en services.py, NO en views ni models
 2. **Thin Views, Fat Services**: Views solo routing HTTP, Services orchestan lógica
 3. **Domain-Driven Design**: Apps organizadas por dominio de negocio (projects, resources, timetracking, etc.)
@@ -20,7 +41,9 @@ Este proyecto implementa un monolito modular donde:
 
 ## 📁 ESTRUCTURA DE PROYECTO MANDATORIA
 
-```
+Estas son sólo la muestra de algunas de las carpetas y su estructura que debemos seguir.
+
+```txt
 10code-intranet/
 ├── apps/                    # Todas las apps Django
 │   ├── core/               # Utilidades compartidas SOLO
@@ -47,7 +70,7 @@ Este proyecto implementa un monolito modular donde:
 
 Cada app Django DEBE seguir esta estructura exacta:
 
-```
+```txt
 apps/[nombre_app]/
 ├── models.py           # Solo estructura de datos + métodos simples
 ├── services.py         # ✅ WRITE operations - Lógica de negocio
@@ -86,6 +109,7 @@ apps/[nombre_app]/
 ## ✅ PATRONES OBLIGATORIOS
 
 ### Service Layer Pattern (CRÍTICO)
+
 ```python
 # apps/projects/services.py
 from django.db import transaction
@@ -113,6 +137,7 @@ class ProjectService:
 ```
 
 ### Selectors Pattern (CRÍTICO)
+
 ```python
 # apps/projects/selectors.py
 def get_projects_list(*, user: User, filters: dict = None):
@@ -139,6 +164,7 @@ def get_projects_list(*, user: User, filters: dict = None):
 ```
 
 ### Views con Inertia (Thin Views)
+
 ```python
 # apps/projects/views.py
 from inertia import render
@@ -170,6 +196,7 @@ def projects_store(request):
 ## 🔧 OPTIMIZACIÓN DE QUERIES (OBLIGATORIO)
 
 ### Siempre Usar select_related / prefetch_related
+
 ```python
 # ❌ MAL - N+1 queries
 projects = Project.objects.all()
@@ -183,6 +210,7 @@ for project in projects:
 ```
 
 ### Prefetch para relaciones inversas y M2M
+
 ```python
 # ✅ EXCELENTE
 projects = Project.objects.select_related(
@@ -197,6 +225,7 @@ projects = Project.objects.select_related(
 ## 🧪 TESTING (NO NEGOCIABLE)
 
 ### Pirámide de Tests
+
 1. **Unit Tests**: Services, selectors, models, utils (70%)
 2. **Integration Tests**: Views completas con DB (20%)
 3. **E2E Tests**: Flujos críticos con Playwright (10%)
@@ -204,6 +233,7 @@ projects = Project.objects.select_related(
 ### Cobertura Mínima: 80%
 
 ### Ejemplo Test de Service
+
 ```python
 # apps/projects/tests/test_services.py
 import pytest
@@ -229,6 +259,7 @@ class TestProjectService:
 ## 🎨 FRONTEND CON INERTIA
 
 ### Componentes de Página React
+
 ```typescript
 // frontend/src/pages/Projects/Index.tsx
 import { Head, Link } from '@inertiajs/react'
@@ -263,6 +294,7 @@ export default function ProjectsIndex({ projects, permissions }: Props) {
 ```
 
 ### Formularios con Inertia
+
 ```typescript
 import { useForm } from '@inertiajs/react'
 
@@ -297,6 +329,7 @@ export default function ProjectCreate() {
 ## 🔐 SEGURIDAD Y PERMISOS
 
 ### Permisos a Nivel de Objeto
+
 ```python
 # Patrón "Props como Permisos"
 def document_detail(request, pk):
@@ -315,6 +348,7 @@ def document_detail(request, pk):
 ```
 
 ### Aplicación en Backend (Seguridad Real)
+
 ```python
 def document_update(request, pk):
     document = get_object_or_404(Document, pk=pk)
@@ -329,6 +363,7 @@ def document_update(request, pk):
 ## 🚀 COMANDOS FRECUENTES
 
 ### Desarrollo
+
 ```bash
 # Iniciar proyecto
 docker-compose up
@@ -352,6 +387,7 @@ isort apps/
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm run dev        # Desarrollo con HMR
@@ -362,6 +398,7 @@ npm run type-check # Verificar TypeScript
 ## 📝 CONFIGURACIÓN DE ENTORNO
 
 ### Variables Obligatorias (.env)
+
 ```bash
 # Django
 DEBUG=True
@@ -388,44 +425,50 @@ ALLOWED_EMAIL_DOMAIN=10code.es
 ## 🎯 REGLAS DE NEGOCIO ESPECÍFICAS DEL PROYECTO
 
 ### Control Horario (Normativa Española 2025)
-- Fichaje digital obligatorio con trazabilidad completa
-- Mínimo 6-7h imputación diaria según perfil
-- SLA imputación: antes 10:00 día siguiente
-- Autocierre automático + 30min gracia
-- Generación automática de incidencias
-- Cumplimiento RGPD, almacenamiento 4 años
+
+* Fichaje digital obligatorio con trazabilidad completa
+* Mínimo 6-7h imputación diaria según perfil
+* SLA imputación: antes 10:00 día siguiente
+* Autocierre automático + 30min gracia
+* Generación automática de incidencias
+* Cumplimiento RGPD, almacenamiento 4 años
 
 ### Gestión de Recursos
-- No permitir asignaciones >100% sin autorización especial
-- Pertenencia múltiple a equipos horizontales/verticales
-- Validación automática de disponibilidad antes de asignar
-- Carry-over vacaciones según normativa española
+
+* No permitir asignaciones >100% sin autorización especial
+* Pertenencia múltiple a equipos horizontales/verticales
+* Validación automática de disponibilidad antes de asignar
+* Carry-over vacaciones según normativa española
 
 ### Sistema CEPF + ML
-- Componentes estándares con Puntos de Función
-- Intervalos confianza 80%, 90%, 95%
-- Aprendizaje continuo con datos históricos
-- Democratización: comerciales pueden estimar sin dependencia técnica
-- Detección automática de anomalías en estimaciones
+
+* Componentes estándares con Puntos de Función
+* Intervalos confianza 80%, 90%, 95%
+* Aprendizaje continuo con datos históricos
+* Democratización: comerciales pueden estimar sin dependencia técnica
+* Detección automática de anomalías en estimaciones
 
 ## 🎨 EXPERIENCIA DE USUARIO
 
 ### Principios de Diseño
-- **Mobile-first responsive design**
-- **Drag & drop** para operaciones comunes
-- **Navegación contextual** entre módulos
-- **Accesos rápidos** basados en rol
-- **Notificaciones inteligentes** sin saturar
+
+* **Mobile-first responsive design**
+* **Drag & drop** para operaciones comunes
+* **Navegación contextual** entre módulos
+* **Accesos rápidos** basados en rol
+* **Notificaciones inteligentes** sin saturar
 
 ### Performance
-- Tiempos respuesta <300ms p95 vistas principales
-- Separación ETL mediante jobs/queues
-- Cache estratégico para dashboards
-- Optimización consultas mandatory
+
+* Tiempos respuesta <300ms p95 vistas principales
+* Separación ETL mediante jobs/queues
+* Cache estratégico para dashboards
+* Optimización consultas mandatory
 
 ## 📚 CUANDO GENERES CÓDIGO
 
 ### Siempre Incluir
+
 1. Type hints en Python
 2. Docstrings descriptivos
 3. Tests correspondientes
@@ -435,13 +478,15 @@ ALLOWED_EMAIL_DOMAIN=10code.es
 7. Transacciones atómicas cuando sea necesario
 
 ### Patrones de Naming
-- Models: Singular, PascalCase (`Project`, `User`)
-- Services: `[Noun]Service` (`ProjectService`)
-- Selectors: `get_[resource]_[action]` (`get_projects_list`)
-- Views: `[resource]_[action]` (`projects_index`, `projects_store`)
-- URLs: kebab-case (`/projects/`, `/time-tracking/`)
+
+* Models: Singular, PascalCase (`Project`, `User`)
+* Services: `[Noun]Service` (`ProjectService`)
+* Selectors: `get_[resource]_[action]` (`get_projects_list`)
+* Views: `[resource]_[action]` (`projects_index`, `projects_store`)
+* URLs: kebab-case (`/projects/`, `/time-tracking/`)
 
 ### Documentación de Código
+
 ```python
 def create_project(
     *,
@@ -472,29 +517,33 @@ def create_project(
 ## 🔄 GIT WORKFLOW
 
 ### Commits
-- Mensajes descriptivos en español
-- Formato: `[TIPO] Descripción breve`
-- Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `perf`
+
+* Mensajes descriptivos en español
+* Formato: `[TIPO] Descripción breve`
+* Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `perf`
 
 ### Branches
-- `main` - Producción
-- `develop` - Desarrollo
-- `feature/[nombre]` - Nuevas features
-- `fix/[nombre]` - Correcciones
+
+* `main` - Producción
+* `develop` - Desarrollo
+* `feature/[nombre]` - Nuevas features
+* `fix/[nombre]` - Correcciones
 
 ### CI/CD
-- Tests automáticos en cada push
-- Linters y formatters obligatorios
-- No merge sin CI green
-- Deploy automático a staging desde develop
-- Deploy manual a producción desde main
+
+* Tests automáticos en cada push
+* Linters y formatters obligatorios
+* No merge sin CI green
+* Deploy automático a staging desde develop
+* Deploy manual a producción desde main
 
 ## 📖 RECURSOS Y REFERENCIAS
 
-- Django 5 Docs: https://docs.djangoproject.com/en/5.0/
-- Inertia.js: https://inertiajs.com/
-- Two Scoops of Django: Mejores prácticas
-- DDD: Domain-Driven Design patterns
+* Python 3.14 Docs: <https://docs.python.org/3/>
+* Django 5 Docs: <https://docs.djangoproject.com/en/5.0/>
+* Inertia.js: <https://inertiajs.com/>
+* Two Scoops of Django: Mejores prácticas
+* DDD: Domain-Driven Design patterns
 
 ---
 
