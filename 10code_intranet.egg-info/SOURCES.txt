@@ -1,6 +1,0 @@
-pyproject.toml
-10code_intranet.egg-info/PKG-INFO
-10code_intranet.egg-info/SOURCES.txt
-10code_intranet.egg-info/dependency_links.txt
-10code_intranet.egg-info/requires.txt
-10code_intranet.egg-info/top_level.txt
