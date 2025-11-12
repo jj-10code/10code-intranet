@@ -12,12 +12,13 @@ La gestión de secretos ha sido optimizada siguiendo el patrón **KISS** (Keep I
 10code-intranet/
 ├── config/
 │   └── secrets.py          # ✅ Módulo simplificado de gestión de secretos
+├── scripts/                # 🔧 Scripts auxiliares
+│   └── validate_secrets.py # 🔍 Script de validación
 ├── secrets/                # ✅ Carpeta para secretos (permisos 700)
 │   ├── secret_key.txt      # ✅ Django SECRET_KEY (permisos 600)
 │   ├── db_password.txt     # ✅ PostgreSQL password (permisos 600)
 │   └── README.md           # 📖 Documentación de secretos
 ├── .env                    # ✅ Variables de entorno NO sensibles
-├── validate_secrets.py     # 🔍 Script de validación
 └── .gitignore              # ✅ Incluye secrets/ y .env
 ```
 
@@ -158,7 +159,7 @@ chmod 400 secrets/*.txt  # r-------- (solo owner lee)
 Antes de desplegar, valida la configuración:
 
 ```bash
-python validate_secrets.py
+python scripts/validate_secrets.py
 ```
 
 Salida esperada:
@@ -222,7 +223,7 @@ Antes de desplegar a producción:
 - [ ] ✅ Secretos están en `secrets/` con permisos `600` o `400`
 - [ ] ✅ Carpeta `secrets/` tiene permisos `700`
 - [ ] ✅ `secrets/` está en `.gitignore`
-- [ ] ✅ `validate_secrets.py` pasa sin errores
+- [ ] ✅ `scripts/validate_secrets.py` pasa sin errores
 - [ ] ✅ SECRET_KEY tiene mínimo 50 caracteres en producción
 - [ ] ✅ SECRET_KEY NO contiene patrones inseguros
 - [ ] ✅ DB password es diferente a desarrollo
@@ -317,7 +318,7 @@ chown 1000:1000 secrets/*.txt  # Ajusta UID/GID según tu contenedor
 Si tienes dudas sobre la gestión de secretos:
 
 1. Revisa este documento
-2. Ejecuta `python validate_secrets.py`
+2. Ejecuta `python scripts/validate_secrets.py`
 3. Revisa `secrets/README.md`
 4. Consulta la documentación de Django
 

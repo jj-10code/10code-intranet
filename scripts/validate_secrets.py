@@ -11,7 +11,8 @@ from pathlib import Path
 
 def validate_secrets():
     """Valida que los archivos de secretos existan y sean válidos."""
-    base_dir = Path(__file__).resolve().parent
+    # Como el script está en scripts/, subir un nivel para obtener project root
+    base_dir = Path(__file__).resolve().parent.parent
     secrets_dir = base_dir / "secrets"
 
     print("🔐 Validando configuración de secretos...")
