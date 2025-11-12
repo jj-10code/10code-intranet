@@ -16,23 +16,24 @@ print(f"   ALLOWED_HOSTS = {os.getenv('ALLOWED_HOSTS', 'NOT SET')}")
 
 # 2. Leer .env manualmente (sin django-environ para debug)
 BASE_DIR = Path(__file__).resolve().parent
-env_file = BASE_DIR / '.env'
+env_file = BASE_DIR / ".env"
 
 print(f"\n2. Buscando .env en: {env_file}")
 print(f"   ¿Existe? {env_file.exists()}")
 
 if env_file.exists():
     print("\n3. Contenido relevante del .env:")
-    with open(env_file, 'r') as f:
+    with open(env_file, "r") as f:
         for line in f:
             line = line.strip()
-            if line and not line.startswith('#'):
-                if any(key in line for key in ['DJANGO_SETTINGS_MODULE', 'DEBUG', 'ALLOWED_HOSTS']):
+            if line and not line.startswith("#"):
+                if any(key in line for key in ["DJANGO_SETTINGS_MODULE", "DEBUG", "ALLOWED_HOSTS"]):
                     print(f"   {line}")
 
 # 4. Ahora cargar con django-environ
 try:
     import environ
+
     env = environ.Env()
     environ.Env.read_env(str(env_file))
 
@@ -46,11 +47,15 @@ except ImportError:
 
 # 5. Verificar qué pasaría con setdefault (SIMULACIÓN)
 print("\n5. SIMULACIÓN de setdefault en manage.py:")
-print(f"   Valor actual de DJANGO_SETTINGS_MODULE: {os.getenv('DJANGO_SETTINGS_MODULE', 'NOT SET')}")
-print(f"   Si ahora ejecutamos setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development'):")
+print(
+    f"   Valor actual de DJANGO_SETTINGS_MODULE: {os.getenv('DJANGO_SETTINGS_MODULE', 'NOT SET')}"
+)
+print(
+    f"   Si ahora ejecutamos setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.development'):"
+)
 
 # Hacer una copia para simular
-original_value = os.getenv('DJANGO_SETTINGS_MODULE')
+original_value = os.getenv("DJANGO_SETTINGS_MODULE")
 if original_value:
     print(f"   → setdefault NO cambia nada, porque ya existe: '{original_value}'")
 else:
