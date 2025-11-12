@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 ENVIRONMENT = get_environment()
 
 # Cargar SECRET_KEY desde archivos o env vars
-SECRET_KEY = read_secret("secret_key", required=True)
+SECRET_KEY = read_secret("django_secret_key", required=True)
 
 # Validar SECRET_KEY según el entorno
 if not validate_secret_key(SECRET_KEY, environment=ENVIRONMENT):
