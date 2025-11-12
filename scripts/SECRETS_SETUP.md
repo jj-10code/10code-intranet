@@ -8,7 +8,7 @@ La gestión de secretos ha sido optimizada siguiendo el patrón **KISS** (Keep I
 
 ## 📁 Estructura de Archivos
 
-```
+```bash
 10code-intranet/
 ├── config/
 │   └── secrets.py          # ✅ Módulo simplificado de gestión de secretos
@@ -28,7 +28,7 @@ La gestión de secretos ha sido optimizada siguiendo el patrón **KISS** (Keep I
 
 ### ✅ Por qué ARCHIVOS > Variables de Entorno
 
-Para tu caso específico (VPS OVHCloud + Docker):
+Para nuestro caso específico (VPS OVHCloud + Docker):
 
 1. **Seguridad en Docker**: Las env vars son visibles con `docker inspect`, los archivos NO
 2. **Docker Secrets**: Estándar compatible con Docker Swarm y Kubernetes
@@ -39,12 +39,14 @@ Para tu caso específico (VPS OVHCloud + Docker):
 ### ✅ Simplificación Implementada
 
 **ANTES** (Sobre-ingenierizado):
+
 - ❌ 3 fuentes simultáneas (Docker Secrets, `_FILE` pattern, env vars)
 - ❌ Parsing de 5 tipos (string, bool, int, list, json) - NO USADOS
 - ❌ Validaciones de DB/Redis URL - NUNCA LLAMADAS
 - ❌ ~190 líneas de código complejo
 
 **AHORA** (KISS):
+
 - ✅ 3 fuentes claras con prioridad: Docker → Archivos → Env vars → Default
 - ✅ Solo strings (parsing manual si es necesario)
 - ✅ Validación mínima pero efectiva del SECRET_KEY
@@ -106,6 +108,7 @@ services:
 ```
 
 En el VPS:
+
 ```bash
 # Crear carpeta de secretos en el VPS
 sudo mkdir -p /opt/10code/secrets
@@ -126,7 +129,7 @@ sudo chown root:root /opt/10code/secrets/*
 
 El sistema `config/secrets.py` busca secretos en este orden:
 
-```
+```bash
 1. /run/secrets/{nombre}        # Docker Secrets (producción)
    ↓ no encontrado
 2. secrets/{nombre}.txt         # Archivos locales (desarrollo)
@@ -163,7 +166,8 @@ python scripts/validate_secrets.py
 ```
 
 Salida esperada:
-```
+
+```txt
 ✅ Carpeta 'secrets/' existe
 ✅ Archivo secret_key.txt existe y es válido
 ✅ Archivo db_password.txt existe y es válido
@@ -178,6 +182,7 @@ Salida esperada:
 ### SECRET_KEY
 
 **Cuándo rotar:**
+
 - Cada 90 días (mínimo)
 - Después de una brecha de seguridad
 - Cuando un desarrollador con acceso deja el equipo
@@ -241,6 +246,7 @@ Antes de desplegar a producción:
 **Causa:** No existe el archivo `secrets/secret_key.txt`
 
 **Solución:**
+
 ```bash
 python -c "import secrets, string; chars = string.ascii_letters + string.digits + '!@#$%^&*(-_=+)'; print(''.join(secrets.choice(chars) for i in range(60)))" > secrets/secret_key.txt
 chmod 600 secrets/secret_key.txt
@@ -257,6 +263,7 @@ chmod 600 secrets/secret_key.txt
 **Causa:** La carpeta tiene permisos demasiado permisivos
 
 **Solución:**
+
 ```bash
 chmod 700 secrets/
 ```
@@ -266,6 +273,7 @@ chmod 700 secrets/
 **Causa:** El usuario que ejecuta Django no tiene permisos para leer los archivos
 
 **Solución:**
+
 ```bash
 # Desarrollo local
 chmod 600 secrets/*.txt
@@ -301,11 +309,13 @@ chown 1000:1000 secrets/*.txt  # Ajusta UID/GID según tu contenedor
 ## 📚 Referencias
 
 ### Documentación
+
 - [Django Settings Best Practices](https://docs.djangoproject.com/en/5.0/topics/settings/)
 - [Docker Secrets](https://docs.docker.com/engine/swarm/secrets/)
 - [OWASP Secrets Management](https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html)
 
 ### Herramientas Recomendadas
+
 - **Ansible Vault**: Encriptar secretos en repos
 - **SOPS**: Encriptar archivos con KMS
 - **1Password/Bitwarden**: Gestionar secretos del equipo
