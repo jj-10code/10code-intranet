@@ -24,15 +24,18 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 logger = logging.getLogger(__name__)
 
 # Detectar entorno actual
-ENVIRONMENT = get_environment(env("DJANGO_SETTINGS_MODULE", default=""))
+ENVIRONMENT = get_environment()
 
+# Cargar SECRET_KEY desde archivos o env vars
+SECRET_KEY = read_secret("secret_key", required=True)
 
-def _validate_with_environment(value: str) -> bool:
-    """Wrapper para validación con entorno detectado."""
-    return validate_secret_key(value, ENVIRONMENT)
-
-
-SECRET_KEY = read_secret("SECRET_KEY", required=True, validation_func=_validate_with_environment)
+# Validar SECRET_KEY según el entorno
+if not validate_secret_key(SECRET_KEY, environment=ENVIRONMENT):
+    raise ValueError(
+        f"SECRET_KEY no cumple requisitos de seguridad para entorno '{ENVIRONMENT}'. "
+        f"Genera una nueva clave segura con: python -c 'from django.core.management.utils "
+        f"import get_random_secret_key; print(get_random_secret_key())'"
+    )
 
 # SECURITY WARNING: No dejes esto en True en producción!
 DEBUG = env("DEBUG")
@@ -101,7 +104,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": env("DATABASE_NAME", default="10code_intranet"),
         "USER": env("DATABASE_USER", default="postgres"),
-        "PASSWORD": read_secret("DATABASE_PASSWORD", default="postgres"),
+        "PASSWORD": read_secret("db_password", required=False, default="postgres"),
         "HOST": env("DATABASE_HOST", default="localhost"),
         "PORT": env("DATABASE_PORT", default="5432"),
         "CONN_MAX_AGE": env("DATABASE_CONN_MAX_AGE", default=60),

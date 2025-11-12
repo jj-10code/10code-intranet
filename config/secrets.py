@@ -1,189 +1,159 @@
-# config/secrets.py
-"""Service layer para gestión de secretos en 10Code Intranet."""
+"""
+Gestión de secretos para 10Code Intranet.
 
-import json
+Filosofía KISS: Simple, seguro y funcional.
+
+Prioridades de lectura:
+1. /run/secrets/{nombre} - Docker Secrets (producción)
+2. secrets/{nombre}.txt - Archivos locales (desarrollo)
+3. Variable de entorno {nombre} - Fallback
+4. Default (si se proporciona)
+"""
+
 import logging
 import os
-from enum import Enum
 from pathlib import Path
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
-class Environment(str, Enum):
-    """
-    Enum para los diferentes entornos de despliegue.
-    """
-    DEVELOPMENT = "development"
-    PRODUCTION = "production"
-    STAGING = "staging"
-
-def get_environment(django_settings_module: str) -> Environment:
-    """Detecta el entorno actual basado en la variable de entorno DJANGO_SETTINGS_MODULE."""
-    settings_module = django_settings_module.lower()
-    if "development" in settings_module:
-        return Environment.DEVELOPMENT.value
-    elif "staging" in settings_module:
-        return Environment.STAGING.value
-    elif "production" in settings_module:
-        return Environment.PRODUCTION.value
-    else:
-        logger.warning("No se pudo detectar el entorno, usando 'development' por defecto.")
-        return Environment.DEVELOPMENT.value
-
 
 def read_secret(
-    env_var: str,
+    secret_name: str,
+    *,
+    required: bool = True,
     default: str | None = None,
-    secret_type: str = "string",  # Configuración: tipo de parsing, no secreto  # noqa: S107
-    required: bool = False,
-    validation_func: callable | None = None,
-) -> str | bool | int | list[str] | dict[str, Any] | None:
+) -> str:
     """
-    Lee un secreto desde múltiples fuentes con validación robusta.
+    Lee un secreto desde archivos o variables de entorno.
 
     Args:
-        env_var: Nombre de la variable de entorno
-        default: Valor por defecto si no se encuentra
-        secret_type: Tipo de dato ('string', 'bool', 'int', 'list', 'json')
-        required: Si es True, falla si no se encuentra el secreto
-        validation_func: Función de validación personalizada
+        secret_name: Nombre del secreto (ej: "SECRET_KEY", "DATABASE_PASSWORD")
+        required: Si es True, lanza excepción si no se encuentra
+        default: Valor por defecto si no se encuentra el secreto
 
     Returns:
-        El secreto convertido al tipo especificado
+        El valor del secreto como string
 
     Raises:
-        ValueError: Si el secreto es requerido pero no se encuentra
-        ValueError: Si el tipo de dato es inválido
+        ValueError: Si el secreto es requerido y no se encuentra
+
+    Example:
+        >>> secret_key = read_secret("SECRET_KEY", required=True)
+        >>> db_password = read_secret("DATABASE_PASSWORD", default="postgres")
     """
-    # 1. Docker Secrets (solo en producción)
-    secret_file = Path("/run/secrets") / env_var.lower()
-    if secret_file.exists():
+    # Obtener el directorio base del proyecto
+    base_dir = Path(__file__).resolve().parent.parent
+
+    # 1. Intentar leer desde Docker Secrets (producción)
+    docker_secret_path = Path("/run/secrets") / secret_name.lower()
+    if docker_secret_path.exists():
         try:
-            value = secret_file.read_text().strip()
-            logger.info(f"Secret '{env_var}' loaded from Docker Secrets")
-            return _parse_secret_value(value, secret_type, validation_func)
+            value = docker_secret_path.read_text().strip()
+            logger.info(f"Secret '{secret_name}' cargado desde Docker Secrets")
+            return value
         except Exception as e:
-            logger.warning(f"Failed to read Docker secret '{env_var}': {e}")
-            if required:
-                raise ValueError(f"Required Docker secret '{env_var}' could not be read") from e
+            logger.warning(f"Error leyendo Docker secret '{secret_name}': {e}")
 
-    # 2. Archivo externo via {env_var}_FILE
-    file_path_env = f"{env_var}_FILE"
-    if file_path_env in os.environ:
+    # 2. Intentar leer desde archivo local secrets/ (desarrollo)
+    local_secret_path = base_dir / "secrets" / f"{secret_name.lower()}.txt"
+    if local_secret_path.exists():
         try:
-            file_path = Path(os.environ[file_path_env])
-            if file_path.exists():
-                value = file_path.read_text().strip()
-                logger.info(f"Secret '{env_var}' loaded from file: {file_path}")
-                return _parse_secret_value(value, secret_type, validation_func)
+            value = local_secret_path.read_text().strip()
+            logger.info(f"Secret '{secret_name}' cargado desde {local_secret_path}")
+            return value
         except Exception as e:
-            logger.warning(f"Failed to read file secret '{env_var}': {e}")
-            if required:
-                raise ValueError(f"Required file secret '{env_var}' could not be read") from e
+            logger.warning(f"Error leyendo archivo local '{secret_name}': {e}")
 
-    # 3. Variable de entorno directa
-    if env_var in os.environ:
-        value = os.environ[env_var]
-        logger.debug(f"Secret '{env_var}' loaded from environment variable")
-        return _parse_secret_value(value, secret_type, validation_func)
+    # 3. Intentar leer desde variable de entorno
+    if secret_name in os.environ:
+        value = os.environ[secret_name]
+        logger.info(f"Secret '{secret_name}' cargado desde variable de entorno")
+        return value
 
-    # 4. Default o error
+    # 4. Usar default si se proporciona
     if default is not None:
-        logger.debug(
-            f"Using default value for '{env_var}': {'***' if secret_type == 'string' else default}"
-        )
-        return _parse_secret_value(str(default), secret_type, validation_func)
+        logger.info(f"Usando valor por defecto para '{secret_name}'")
+        return default
 
+    # 5. Si es requerido y no se encontró, lanzar error
     if required:
-        raise ValueError(f"Required secret '{env_var}' not found in any source")
+        raise ValueError(
+            f"Secret requerido '{secret_name}' no encontrado en:\n"
+            f"  - Docker Secrets: {docker_secret_path}\n"
+            f"  - Archivo local: {local_secret_path}\n"
+            f"  - Variable de entorno: {secret_name}\n"
+            f"Asegúrate de crear el archivo o definir la variable."
+        )
 
-    logger.warning(f"Secret '{env_var}' not found, returning None")
+    # 6. No requerido y no encontrado
+    logger.warning(f"Secret '{secret_name}' no encontrado, retornando None")
     return None
 
 
-def _parse_secret_value(
-    value: str,
-    secret_type: str,
-    validation_func: callable | None = None,
-) -> str | bool | int | list[str] | dict[str, Any] | None:
+def validate_secret_key(secret_key: str, *, environment: str = "production") -> bool:
     """
-    Convierte el valor del secreto al tipo especificado con validación.
-    """
-    try:
-        # Parsear según el tipo
-        if secret_type == "string":
-            result = value
-        elif secret_type == "bool":
-            result = value.lower() in ("true", "1", "yes", "on")
-        elif secret_type == "int":
-            result = int(value)
-        elif secret_type == "list":
-            # Comma-separated list
-            result = [item.strip() for item in value.split(",") if item.strip()]
-        elif secret_type == "json":
-            result = json.loads(value)
-        else:
-            raise ValueError(f"Unsupported secret type: {secret_type}")
-
-        # Aplicar validación personalizada
-        if validation_func and not validation_func(result):
-            raise ValueError(f"Secret validation failed for type {secret_type}")
-
-        return result
-
-    except (ValueError, json.JSONDecodeError) as e:
-        raise ValueError(f"Failed to parse secret as {secret_type}: {e}") from e
-
-
-def validate_secret_key(secret_key: str, environment: str = "production") -> bool:
-    """
-    Valida que el SECRET_KEY de Django cumpla con los requisitos mínimos.
+    Valida que SECRET_KEY cumpla requisitos mínimos de seguridad.
 
     Args:
         secret_key: La clave secreta a validar
-        environment: El entorno ('development', 'production')
+        environment: Entorno ('development', 'production', 'staging')
+
+    Returns:
+        True si es válida, False si no lo es
     """
-    if not secret_key:
+    if not secret_key or len(secret_key) == 0:
         return False
 
-    # Django requiere al menos 50 caracteres para SECRET_KEY
-    if len(secret_key) < 50:
-        if environment == "development":
-            return len(secret_key) >= 20
+    # Longitud mínima según entorno
+    min_length = 50 if environment == "production" else 30
+
+    if len(secret_key) < min_length:
+        logger.error(
+            f"SECRET_KEY debe tener al menos {min_length} caracteres "
+            f"en entorno '{environment}' (actual: {len(secret_key)})"
+        )
         return False
 
-    # Para desarrollo, ser más permisivo
-    if environment == "development":
-        insecure_patterns = [
-            "your-secret-key",
-            "CHANGE_ME",
-        ]
-        return not any(pattern in secret_key.upper() for pattern in insecure_patterns)
+    # Detectar claves inseguras obvias
+    insecure_patterns = [
+        "django-insecure-",
+        "change-me",
+        "changeme",
+        "your-secret-key",
+        "yoursecretkey",
+        "secret",
+        "password",
+        "12345",
+    ]
 
-    # Para production, ser más estricto
-    default_keys = ["django-insecure-", "insecure", "change-me", "your-secret-key"]
+    secret_key_lower = secret_key.lower()
+    for pattern in insecure_patterns:
+        if pattern in secret_key_lower:
+            logger.error(f"SECRET_KEY contiene patrón inseguro: '{pattern}'")
+            return False
 
-    return not any(default_key in secret_key.lower() for default_key in default_keys)
+    return True
 
 
-def validate_db_url(db_url: str) -> bool:
+def get_environment() -> str:
     """
-    Valida que la URL de base de datos tenga el formato correcto.
+    Detecta el entorno actual basado en DJANGO_SETTINGS_MODULE.
+
+    Returns:
+        'development', 'production' o 'staging'
     """
-    if not db_url:
-        return False
+    settings_module = os.getenv("DJANGO_SETTINGS_MODULE", "").lower()
 
-    # Debe empezar con postgresql://, postgres://, o sqlite://
-    valid_prefixes = ["postgresql://", "postgres://", "sqlite://"]
-    return any(db_url.startswith(prefix) for prefix in valid_prefixes)
-
-
-def validate_redis_url(redis_url: str) -> bool:
-    """
-    Valida que la URL de Redis tenga el formato correcto.
-    """
-    if not redis_url:
-        return False
-
-    return redis_url.startswith("redis://") or redis_url.startswith("rediss://")
+    if "production" in settings_module:
+        return "production"
+    elif "staging" in settings_module:
+        return "staging"
+    elif "development" in settings_module or "dev" in settings_module:
+        return "development"
+    else:
+        # Default seguro
+        logger.warning(
+            f"No se pudo detectar entorno desde DJANGO_SETTINGS_MODULE='{settings_module}', "
+            "usando 'development'"
+        )
+        return "development"
