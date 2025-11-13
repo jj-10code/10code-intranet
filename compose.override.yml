@@ -1,10 +1,8 @@
 # ============================================================================
 # DOCKER COMPOSE OVERRIDE - DESARROLLO
 # ============================================================================
-# Este archivo se aplica automáticamente sobre docker-compose.yml en desarrollo
-# Para producción, usar: docker-compose -f docker-compose.yml up
-
-version: "3.9"
+# Este archivo se aplica automáticamente sobre compose.yml en desarrollo
+# Para producción, usar: docker compose -f compose.yml up
 
 services:
   # ============================================================================

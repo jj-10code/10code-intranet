@@ -74,5 +74,5 @@ secrets/*.txt
 
 # Docker
 Dockerfile*
-docker-compose*.yml
+compose*.yml
 .dockerignore

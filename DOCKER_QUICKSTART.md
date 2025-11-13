@@ -152,6 +152,13 @@ Si tienes problemas:
 3. Lee la documentación completa: [docker/README.md](docker/README.md)
 4. Consulta con el equipo en Discord/Slack
 
+## 📝 Nota sobre Docker Compose
+
+Este proyecto usa la **Compose Specification moderna**:
+- Comando: `docker compose` (con espacio, no guion)
+- Archivo: `compose.yml` (no `docker-compose.yml`)
+- Sin línea `version` en los archivos YAML
+
 ---
 
 **¿Listo para desarrollar? 🚀**

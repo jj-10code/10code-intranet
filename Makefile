@@ -6,7 +6,7 @@
 .PHONY: help build up down logs shell test migrate createsuperuser clean restart
 
 # Variables
-DOCKER_COMPOSE = docker compose
+COMPOSE = docker compose
 SERVICE_WEB = web
 SERVICE_FRONTEND = frontend
 SERVICE_DB = db
@@ -21,80 +21,80 @@ help: ## Mostrar esta ayuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
 build: ## Construir imágenes de Docker
-	$(DOCKER_COMPOSE) build
+	$(COMPOSE) build
 
 up: ## Levantar servicios en background
-	$(DOCKER_COMPOSE) up -d
+	$(COMPOSE) up -d
 	@echo "✅ Servicios levantados"
 	@echo "🌐 Backend: http://localhost:8000"
 	@echo "⚡ Frontend: http://localhost:5173"
 
 down: ## Detener servicios
-	$(DOCKER_COMPOSE) down
+	$(COMPOSE) down
 
 restart: ## Reiniciar servicios
-	$(DOCKER_COMPOSE) restart
+	$(COMPOSE) restart
 
 logs: ## Ver logs de todos los servicios
-	$(DOCKER_COMPOSE) logs -f
+	$(COMPOSE) logs -f
 
 logs-web: ## Ver logs del backend Django
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_WEB)
+	$(COMPOSE) logs -f $(SERVICE_WEB)
 
 logs-frontend: ## Ver logs del frontend Vite
-	$(DOCKER_COMPOSE) logs -f $(SERVICE_FRONTEND)
+	$(COMPOSE) logs -f $(SERVICE_FRONTEND)
 
 ps: ## Ver estado de servicios
-	$(DOCKER_COMPOSE) ps
+	$(COMPOSE) ps
 
 # ============================================================================
 # DJANGO MANAGEMENT
 # ============================================================================
 
 shell: ## Abrir Django shell
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) python manage.py shell
+	$(COMPOSE) exec $(SERVICE_WEB) python manage.py shell
 
 migrate: ## Ejecutar migraciones
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) python manage.py migrate
+	$(COMPOSE) exec $(SERVICE_WEB) python manage.py migrate
 
 makemigrations: ## Crear nuevas migraciones
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) python manage.py makemigrations
+	$(COMPOSE) exec $(SERVICE_WEB) python manage.py makemigrations
 
 createsuperuser: ## Crear superusuario
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) python manage.py createsuperuser
+	$(COMPOSE) exec $(SERVICE_WEB) python manage.py createsuperuser
 
 collectstatic: ## Recolectar archivos estáticos
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) python manage.py collectstatic --noinput
+	$(COMPOSE) exec $(SERVICE_WEB) python manage.py collectstatic --noinput
 
 # ============================================================================
 # TESTING
 # ============================================================================
 
 test: ## Ejecutar todos los tests
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) pytest
+	$(COMPOSE) exec $(SERVICE_WEB) pytest
 
 test-coverage: ## Ejecutar tests con cobertura
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) pytest --cov=apps --cov-report=html
+	$(COMPOSE) exec $(SERVICE_WEB) pytest --cov=apps --cov-report=html
 
 test-fast: ## Ejecutar tests sin migraciones
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) pytest --nomigrations
+	$(COMPOSE) exec $(SERVICE_WEB) pytest --nomigrations
 
 # ============================================================================
 # DATABASE
 # ============================================================================
 
 db-shell: ## Abrir shell de PostgreSQL
-	$(DOCKER_COMPOSE) exec $(SERVICE_DB) psql -U postgres -d 10code_intranet
+	$(COMPOSE) exec $(SERVICE_DB) psql -U postgres -d 10code_intranet
 
 db-backup: ## Backup de base de datos
-	$(DOCKER_COMPOSE) exec $(SERVICE_DB) pg_dump -U postgres 10code_intranet > backup_$$(date +%Y%m%d_%H%M%S).sql
+	$(COMPOSE) exec $(SERVICE_DB) pg_dump -U postgres 10code_intranet > backup_$$(date +%Y%m%d_%H%M%S).sql
 	@echo "✅ Backup creado"
 
 db-reset: ## Resetear base de datos (¡CUIDADO!)
 	@echo "⚠️  ¿Estás seguro? Esto borrará toda la base de datos. [Ctrl+C para cancelar]"
 	@read -p "Escribe 'SI' para confirmar: " confirm && [ "$$confirm" = "SI" ]
-	$(DOCKER_COMPOSE) down -v
-	$(DOCKER_COMPOSE) up -d $(SERVICE_DB)
+	$(COMPOSE) down -v
+	$(COMPOSE) up -d $(SERVICE_DB)
 	@sleep 5
 	$(MAKE) migrate
 	@echo "✅ Base de datos reseteada"
@@ -104,13 +104,13 @@ db-reset: ## Resetear base de datos (¡CUIDADO!)
 # ============================================================================
 
 clean: ## Limpiar contenedores, imágenes y volúmenes
-	$(DOCKER_COMPOSE) down -v --remove-orphans
+	$(COMPOSE) down -v --remove-orphans
 	docker system prune -f
 
 clean-all: ## Limpieza completa (¡CUIDADO! Borra TODO)
 	@echo "⚠️  ¿Estás seguro? Esto borrará TODOS los contenedores, imágenes y volúmenes. [Ctrl+C para cancelar]"
 	@read -p "Escribe 'SI' para confirmar: " confirm && [ "$$confirm" = "SI" ]
-	$(DOCKER_COMPOSE) down -v --remove-orphans
+	$(COMPOSE) down -v --remove-orphans
 	docker system prune -a -f --volumes
 
 # ============================================================================
@@ -130,7 +130,7 @@ dev-setup: ## Setup inicial para desarrollo
 	@echo "🚀 Crea un superusuario con: make createsuperuser"
 
 frontend-install: ## Instalar dependencias del frontend
-	$(DOCKER_COMPOSE) exec $(SERVICE_FRONTEND) npm install
+	$(COMPOSE) exec $(SERVICE_FRONTEND) npm install
 
 frontend-build: ## Build del frontend para producción
 	cd frontend && npm run build
@@ -140,13 +140,13 @@ frontend-build: ## Build del frontend para producción
 # ============================================================================
 
 exec-web: ## Ejecutar comando en contenedor web (uso: make exec-web CMD="python manage.py ...")
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) $(CMD)
+	$(COMPOSE) exec $(SERVICE_WEB) $(CMD)
 
 bash-web: ## Abrir bash en contenedor web
-	$(DOCKER_COMPOSE) exec $(SERVICE_WEB) /bin/bash
+	$(COMPOSE) exec $(SERVICE_WEB) /bin/bash
 
 bash-frontend: ## Abrir shell en contenedor frontend
-	$(DOCKER_COMPOSE) exec $(SERVICE_FRONTEND) /bin/sh
+	$(COMPOSE) exec $(SERVICE_FRONTEND) /bin/sh
 
 stats: ## Ver estadísticas de recursos
 	docker stats
