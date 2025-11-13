@@ -1,0 +1,75 @@
+# ============================================================================
+# DOCKER COMPOSE OVERRIDE - DESARROLLO
+# ============================================================================
+# Este archivo se aplica automáticamente sobre docker-compose.yml en desarrollo
+# Para producción, usar: docker-compose -f docker-compose.yml up
+
+version: "3.9"
+
+services:
+  # ============================================================================
+  # Django Web - Configuración de Desarrollo
+  # ============================================================================
+  web:
+    command: python manage.py runserver 0.0.0.0:8000
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+      - DEBUG=True
+    volumes:
+      # Mount code para hot reload
+      - .:/app
+      # Exclude venv y cache
+      - /app/.venv
+      - /app/__pycache__
+      - /app/staticfiles
+      - /app/media
+    # Puertos adicionales para debugging
+    ports:
+      - "8000:8000"
+
+  # ============================================================================
+  # Celery Worker - Configuración de Desarrollo
+  # ============================================================================
+  celery_worker:
+    command: celery -A config worker --loglevel=debug --concurrency=1
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/__pycache__
+
+  # ============================================================================
+  # Celery Beat - Configuración de Desarrollo
+  # ============================================================================
+  celery_beat:
+    command: celery -A config beat --loglevel=debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      - DJANGO_SETTINGS_MODULE=config.settings.development
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/__pycache__
+
+  # ============================================================================
+  # Frontend Vite Dev Server - Solo Desarrollo
+  # ============================================================================
+  frontend:
+    image: node:22-alpine
+    container_name: 10code_frontend
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - VITE_DEV_SERVER_URL=http://localhost:5173
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      # Exclude node_modules para performance
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - backend
+    restart: unless-stopped
+    depends_on:
+      - web
