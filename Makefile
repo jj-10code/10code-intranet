@@ -136,6 +136,39 @@ frontend-build: ## Build del frontend para producción
 	cd frontend && npm run build
 
 # ============================================================================
+# MACHINE LEARNING
+# ============================================================================
+
+ml-build: ## Build con dependencias de ML (TensorFlow, PyTorch, etc.)
+	@echo "🤖 Building with ML dependencies (this will take longer)..."
+	docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml build
+
+ml-up: ## Levantar servicios con ML
+	@echo "🤖 Starting services with ML dependencies..."
+	docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml up -d
+	@echo "✅ Servicios con ML levantados"
+	@echo "🌐 Backend: http://localhost:8000"
+	@echo "⚡ Frontend: http://localhost:5173"
+
+ml-setup: ## Setup completo con ML
+	@echo "🤖 Configurando entorno de desarrollo con ML..."
+	@test -f .env || cp .env.example .env
+	@test -f secrets/db_password.txt || cp secrets/db_password.example.txt secrets/db_password.txt
+	@test -f secrets/django_secret_key.txt || cp secrets/django_secret_key.example.txt secrets/django_secret_key.txt
+	$(MAKE) ml-build
+	$(MAKE) ml-up
+	@sleep 10
+	$(MAKE) migrate
+	@echo "✅ Setup con ML completo"
+	@echo "🚀 Crea un superusuario con: make createsuperuser"
+
+ml-down: ## Detener servicios de ML
+	docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml down
+
+ml-logs: ## Ver logs de servicios con ML
+	docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml logs -f
+
+# ============================================================================
 # UTILIDADES
 # ============================================================================
 
@@ -156,10 +189,10 @@ stats: ## Ver estadísticas de recursos
 # ============================================================================
 
 prod-build: ## Build para producción
-	docker compose -f docker-compose.yml build --no-cache
+	docker compose -f compose.yml build --no-cache
 
 prod-up: ## Levantar en modo producción
-	docker compose -f docker-compose.yml up -d
+	docker compose -f compose.yml up -d
 
 prod-logs: ## Ver logs en producción
-	docker compose -f docker-compose.yml logs -f
+	docker compose -f compose.yml logs -f

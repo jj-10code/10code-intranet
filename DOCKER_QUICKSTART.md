@@ -93,6 +93,18 @@ make db-backup       # Backup de base de datos
 make db-reset        # Resetear DB (¡CUIDADO!)
 ```
 
+### Machine Learning (Opcional)
+
+```bash
+make ml-setup        # Setup con ML (TensorFlow, PyTorch)
+make ml-build        # Build con ML (~10-15 min)
+make ml-up           # Levantar con ML
+make ml-down         # Detener servicios ML
+```
+
+> 💡 **Nota:** Las dependencias de ML suman ~6GB. Solo necesario para el módulo de estimaciones CEPF.
+> Ver [docker/ML_README.md](docker/ML_README.md) para más detalles.
+
 ### Limpieza
 
 ```bash

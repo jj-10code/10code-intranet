@@ -16,8 +16,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     PYTHONDONTWRITEBYTECODE=1
 
-# Argumento para determinar si instalar dependencias dev
+# Argumentos para control granular de dependencias
 ARG INSTALL_DEV=false
+ARG INSTALL_ML=false
 
 # System dependencies para compilar paquetes Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,13 +29,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copiar solo archivos de dependencias (maximiza cache)
 COPY pyproject.toml uv.lock ./
 
-# Instalar dependencias (con o sin dev según build arg)
+# Instalar dependencias con control granular
 RUN --mount=type=cache,target=/root/.cache/uv \
-    if [ "$INSTALL_DEV" = "true" ]; then \
-        echo "Installing with dev dependencies..."; \
-        uv sync --frozen --no-install-project; \
+    if [ "$INSTALL_DEV" = "false" ] && [ "$INSTALL_ML" = "false" ]; then \
+        echo "📦 Installing PRODUCTION dependencies only (base)..."; \
+        uv sync --frozen --no-dev --no-install-project; \
+    elif [ "$INSTALL_DEV" = "true" ] && [ "$INSTALL_ML" = "false" ]; then \
+        echo "📦 Installing DEVELOPMENT dependencies (base + dev, without ML ~1GB)..."; \
+        uv sync --frozen --no-install-project --group dev; \
+    elif [ "$INSTALL_DEV" = "true" ] && [ "$INSTALL_ML" = "true" ]; then \
+        echo "📦 Installing ALL dependencies (base + dev + ML ~6GB)..."; \
+        echo "⚠️  This will take several minutes due to TensorFlow & PyTorch..."; \
+        uv sync --frozen --no-install-project --group dev --group ml; \
     else \
-        echo "Installing without dev dependencies..."; \
+        echo "⚠️  Invalid combination: INSTALL_DEV=$INSTALL_DEV, INSTALL_ML=$INSTALL_ML"; \
+        echo "📦 Falling back to production dependencies..."; \
         uv sync --frozen --no-dev --no-install-project; \
     fi
 
