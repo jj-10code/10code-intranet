@@ -61,6 +61,9 @@ RUN groupadd -r appuser && \
 # Copiar código de aplicación
 COPY --chown=appuser:appuser . .
 
+# Asegurar que entrypoint.sh sea ejecutable (antes de cambiar de usuario)
+RUN chmod +x /app/docker/entrypoint.sh
+
 # Cambiar a usuario no-root
 USER appuser
 
@@ -73,10 +76,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
 EXPOSE 8000
 
 # Entrypoint para migraciones automáticas
-COPY --chown=appuser:appuser docker/entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
-
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/docker/entrypoint.sh"]
 
 # Comando por defecto (Gunicorn para producción)
 CMD ["gunicorn", "config.wsgi:application", \
