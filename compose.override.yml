@@ -9,6 +9,12 @@ services:
   # Django Web - Configuración de Desarrollo
   # ============================================================================
   web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        INSTALL_DEV: "true"
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.development
@@ -29,6 +35,12 @@ services:
   # Celery Worker - Configuración de Desarrollo
   # ============================================================================
   celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        INSTALL_DEV: "true"
     command: celery -A config worker --loglevel=debug --concurrency=1
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.development
@@ -41,6 +53,12 @@ services:
   # Celery Beat - Configuración de Desarrollo
   # ============================================================================
   celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+      args:
+        INSTALL_DEV: "true"
     command: celery -A config beat --loglevel=debug --scheduler django_celery_beat.schedulers:DatabaseScheduler
     environment:
       - DJANGO_SETTINGS_MODULE=config.settings.development

@@ -16,6 +16,9 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=never \
     PYTHONDONTWRITEBYTECODE=1
 
+# Argumento para determinar si instalar dependencias dev
+ARG INSTALL_DEV=false
+
 # System dependencies para compilar paquetes Python
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -25,9 +28,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copiar solo archivos de dependencias (maximiza cache)
 COPY pyproject.toml uv.lock ./
 
-# Instalar dependencias (sin dev para producción)
+# Instalar dependencias (con o sin dev según build arg)
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-install-project
+    if [ "$INSTALL_DEV" = "true" ]; then \
+        echo "Installing with dev dependencies..."; \
+        uv sync --frozen --no-install-project; \
+    else \
+        echo "Installing without dev dependencies..."; \
+        uv sync --frozen --no-dev --no-install-project; \
+    fi
 
 # ============================================================================
 # STAGE 2: Runtime - Imagen final minimalista
