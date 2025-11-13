@@ -36,11 +36,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --frozen --no-dev --no-install-project; \
     elif [ "$INSTALL_DEV" = "true" ] && [ "$INSTALL_ML" = "false" ]; then \
         echo "📦 Installing DEVELOPMENT dependencies (base + dev, without ML ~1GB)..."; \
-        uv sync --frozen --no-install-project --group dev; \
+        uv sync --frozen --no-install-project --extra dev; \
     elif [ "$INSTALL_DEV" = "true" ] && [ "$INSTALL_ML" = "true" ]; then \
         echo "📦 Installing ALL dependencies (base + dev + ML ~6GB)..."; \
         echo "⚠️  This will take several minutes due to TensorFlow & PyTorch..."; \
-        uv sync --frozen --no-install-project --group dev --group ml; \
+        uv sync --frozen --no-install-project --extra dev --extra ml; \
     else \
         echo "⚠️  Invalid combination: INSTALL_DEV=$INSTALL_DEV, INSTALL_ML=$INSTALL_ML"; \
         echo "📦 Falling back to production dependencies..."; \
