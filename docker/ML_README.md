@@ -1,8 +1,8 @@
-# 🤖 Machine Learning - Guía de Desarrollo
+# Machine Learning - Guía de Desarrollo
 
 Esta guía es para desarrolladores que trabajan con el módulo de estimaciones CEPF y Machine Learning.
 
-## 📦 Dependencias de ML
+## Dependencias de ML
 
 El proyecto incluye las siguientes dependencias de ML (grupo opcional `[ml]`):
 
@@ -19,7 +19,7 @@ El proyecto incluye las siguientes dependencias de ML (grupo opcional `[ml]`):
 
 **Total:** ~6GB de dependencias adicionales
 
-## 🚀 Quick Start con ML
+## Quick Start con ML
 
 ### Opción 1: Setup Completo (Recomendado)
 
@@ -46,7 +46,7 @@ make ml-build
 make ml-up
 ```
 
-## 🛠️ Comandos Disponibles
+## Comandos Disponibles
 
 ### Gestión de Servicios con ML
 
@@ -66,30 +66,30 @@ make up            # Levantar sin ML
 make down          # Detener servicios
 ```
 
-## 💡 Cuándo Usar ML
+## Cuándo Usar ML
 
-**✅ Usa `make ml-*` cuando:**
+**Usa `make ml-*` cuando:**
 - Desarrollas el módulo de estimaciones CEPF
 - Entrenas o pruebas modelos de ML
 - Trabajas con procesamiento de lenguaje natural
 - Necesitas TensorFlow o PyTorch
 
-**❌ NO necesitas ML para:**
+**NO necesitas ML para:**
 - Desarrollo de frontend
 - Trabajo en módulos de proyectos, recursos, timetracking
 - Testing general de la aplicación
 - Desarrollo de APIs
 
-## ⏱️ Tiempos de Build
+## Tiempos de Build
 
 | Configuración | Primera Build | Rebuilds |
 |--------------|---------------|----------|
 | **Sin ML** (dev) | 2-3 min | 30-60 seg |
 | **Con ML** | 10-15 min | 5-10 min |
 
-💡 **Tip:** Los rebuilds son más rápidos gracias al cache de Docker y uv.
+**Tip:** Los rebuilds son más rápidos gracias al cache de Docker y uv.
 
-## 📊 Uso de Recursos
+## Uso de Recursos
 
 ### Requisitos Mínimos para ML
 
@@ -105,7 +105,7 @@ Si usas Docker Desktop, aumenta la memoria asignada:
 2. Aumentar a mínimo 6GB (8GB recomendado)
 3. Apply & Restart
 
-## 🔄 Workflow de Desarrollo
+## Workflow de Desarrollo
 
 ### Desarrollo Sin ML (Mayoría del Tiempo)
 
@@ -130,7 +130,7 @@ make down
 make up
 ```
 
-## 🐍 Verificar Instalación de ML
+## Verificar Instalación de ML
 
 ```bash
 # Acceder al contenedor
@@ -145,7 +145,7 @@ python -c "import sklearn; print(f'scikit-learn {sklearn.__version__}')"
 exit
 ```
 
-## 📝 Notas Importantes
+## Notas Importantes
 
 ### GPU Support
 
@@ -184,7 +184,7 @@ El cache de uv acelera rebuilds. Para limpiar si hay problemas:
 docker builder prune --filter type=exec.cachemount
 ```
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### Build Muy Lento
 
@@ -207,7 +207,7 @@ docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml ps
 make ml-build
 ```
 
-## 📚 Referencias
+## Referencias
 
 - [TensorFlow Docs](https://www.tensorflow.org/)
 - [PyTorch Docs](https://pytorch.org/)
@@ -217,4 +217,4 @@ make ml-build
 
 ---
 
-**Desarrollado con 💙 por 10Code Team**
+**Desarrollado por el equipo de 10Code**
