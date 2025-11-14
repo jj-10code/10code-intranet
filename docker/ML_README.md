@@ -69,12 +69,14 @@ make down          # Detener servicios
 ## Cuándo Usar ML
 
 **Usa `make ml-*` cuando:**
+
 - Desarrollas el módulo de estimaciones CEPF
 - Entrenas o pruebas modelos de ML
 - Trabajas con procesamiento de lenguaje natural
 - Necesitas TensorFlow o PyTorch
 
 **NO necesitas ML para:**
+
 - Desarrollo de frontend
 - Trabajo en módulos de proyectos, recursos, timetracking
 - Testing general de la aplicación
@@ -214,7 +216,3 @@ make ml-build
 - [scikit-learn Docs](https://scikit-learn.org/)
 - [spaCy Docs](https://spacy.io/)
 - [Hugging Face Transformers](https://huggingface.co/docs/transformers/)
-
----
-
-**Desarrollado por el equipo de 10Code**

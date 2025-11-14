@@ -28,6 +28,7 @@ docker compose logs -f web
 ## 📦 Servicios Incluidos
 
 ### Backend Stack
+
 - **web**: Django 5.2 + Python 3.14 (runserver en dev, gunicorn en prod)
 - **db**: PostgreSQL 18
 - **redis**: Redis 8.2 (cache + Celery broker)
@@ -35,6 +36,7 @@ docker compose logs -f web
 - **celery_beat**: Scheduler para tareas periódicas
 
 ### Frontend Stack
+
 - **frontend**: Vite dev server (solo desarrollo) - Node 22 con HMR
 
 ## 🛠️ Comandos Útiles
@@ -293,7 +295,3 @@ docker compose -f compose.yml up -d
 - [PostgreSQL Official Image](https://hub.docker.com/_/postgres)
 - [Redis Official Image](https://hub.docker.com/_/redis)
 - [Python Official Image](https://hub.docker.com/_/python)
-
----
-
-**Desarrollado con 💙 por 10Code Team**

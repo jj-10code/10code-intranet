@@ -24,6 +24,7 @@
 ## Stack Tecnológico
 
 ### Backend
+
 - **Django 5.2** - Framework web Python (Monolito Modular)
 - **Inertia.js** - Puente Django-React (SPA sin API REST)
 - **PostgreSQL 18** - Base de datos relacional
@@ -31,6 +32,7 @@
 - **Celery 5.5** - Tareas asíncronas y programadas
 
 ### Frontend
+
 - **React 18** - Librería UI
 - **Vite** - Build tool con HMR
 - **TypeScript** - Tipado estático
@@ -38,12 +40,14 @@
 - **TailwindCSS** - Utility-first CSS
 
 ### DevOps
+
 - **Docker** - Contenedores con multi-stage builds
 - **uv** - Gestor de paquetes Python ultrarrápido
 - **pytest** - Testing framework
 - **GitHub Actions** - CI/CD
 
 ### Machine Learning (Opcional)
+
 - **TensorFlow 2.x** - Framework principal de ML
 - **PyTorch** - Framework alternativo de ML
 - **scikit-learn** - Algoritmos clásicos de ML
@@ -95,9 +99,9 @@ make createsuperuser
 
 | Servicio | URL | Descripción |
 |----------|-----|-------------|
-| **Backend** | http://localhost:8000 | Django + Inertia.js |
-| **Frontend** | http://localhost:5173 | Vite dev server (HMR) |
-| **Admin** | http://localhost:8000/admin | Django Admin |
+| **Backend** | <http://localhost:8000> | Django + Inertia.js |
+| **Frontend** | <http://localhost:5173> | Vite dev server (HMR) |
+| **Admin** | <http://localhost:8000/admin> | Django Admin |
 | **PostgreSQL** | localhost:5432 | Base de datos |
 | **Redis** | localhost:6379 | Cache/Celery broker |
 
@@ -195,7 +199,7 @@ make db-reset
 make logs-db
 ```
 
-### Frontend
+### Frontend dev
 
 ```bash
 # Ver logs del frontend
@@ -240,12 +244,14 @@ El proyecto incluye soporte opcional para **Machine Learning** (TensorFlow, PyTo
 ### ¿Cuándo Necesitas ML?
 
 **Usa modo ML cuando:**
+
 - Desarrollas el módulo de estimaciones CEPF
 - Entrenas o pruebas modelos de ML
 - Trabajas con procesamiento de lenguaje natural
 - Necesitas TensorFlow o PyTorch
 
 **NO necesitas ML para:**
+
 - Desarrollo de frontend
 - Trabajo en módulos de proyectos, recursos, timetracking
 - Testing general de la aplicación
@@ -293,6 +299,7 @@ exit
 | **Con ML** | 10-15 min | 5-10 min | ~7GB |
 
 **Requisitos mínimos para ML:**
+
 - RAM: 8GB (16GB recomendado)
 - Disco: 10GB libres
 - CPU: 4 cores (8 cores recomendado)
@@ -313,9 +320,9 @@ El proyecto implementa una arquitectura de **Monolito Modular Majestuoso** con l
 
 ### Estructura del Proyecto
 
-```
+```bash
 10code-intranet/
-├── apps/                    # Aplicaciones Django (módulos de dominio)
+├── apps/                   # Aplicaciones Django (módulos de dominio)
 │   ├── core/               # Utilidades compartidas
 │   ├── accounts/           # Usuarios y autenticación
 │   ├── projects/           # Gestión de proyectos
@@ -328,8 +335,8 @@ El proyecto implementa una arquitectura de **Monolito Modular Majestuoso** con l
 │
 ├── config/                 # Configuración del proyecto
 │   ├── settings/           # Settings (base, dev, prod)
-│   ├── urls.py            # URLs principales
-│   └── wsgi.py / asgi.py  # WSGI/ASGI entry points
+│   ├── urls.py             # URLs principales
+│   └── wsgi.py / asgi.py   # WSGI/ASGI entry points
 │
 ├── frontend/               # Frontend React + Vite
 │   └── src/
@@ -338,27 +345,27 @@ El proyecto implementa una arquitectura de **Monolito Modular Majestuoso** con l
 │       └── lib/            # Utilidades y helpers
 │
 ├── docker/                 # Configuración Docker
-│   ├── entrypoint.sh      # Script de inicialización
-│   └── ML_README.md       # Guía de ML development
+│   ├── entrypoint.sh       # Script de inicialización
+│   └── ML_README.md        # Guía de ML development
 │
-├── secrets/               # Secrets para desarrollo (gitignored)
-├── staticfiles/           # Archivos estáticos compilados
-├── media/                 # Media files (uploads)
+├── secrets/                # Secrets para desarrollo (gitignored)
+├── staticfiles/            # Archivos estáticos compilados
+├── media/                  # Media files (uploads)
 │
 ├── Dockerfile             # Multi-stage Docker build
-├── compose.yml           # Docker Compose base
-├── compose.override.yml  # Overrides para desarrollo
-├── compose.ml.yml        # Overlay para ML
-├── Makefile              # Comandos de desarrollo
-├── pyproject.toml        # Dependencias Python (uv)
-└── pytest.ini            # Configuración de tests
+├── compose.yml            # Docker Compose base
+├── compose.override.yml   # Overrides para desarrollo
+├── compose.ml.yml         # Overlay para ML
+├── Makefile               # Comandos de desarrollo
+├── pyproject.toml         # Dependencias Python (uv)
+└── pytest.ini             # Configuración de tests
 ```
 
 ### Estructura Interna de Cada App
 
 Cada aplicación Django sigue esta estructura obligatoria:
 
-```
+```bash
 apps/[nombre_app]/
 ├── models.py           # Solo estructura de datos + métodos simples
 ├── services.py         # ✅ WRITE operations - Lógica de negocio
@@ -631,6 +638,7 @@ Ver [docker/ML_README.md - Troubleshooting](docker/ML_README.md#troubleshooting)
 ### Workflow de Desarrollo
 
 1. **Crear rama** desde `develop`:
+
    ```bash
    git checkout develop
    git pull
@@ -645,18 +653,21 @@ Ver [docker/ML_README.md - Troubleshooting](docker/ML_README.md#troubleshooting)
    - Docstrings descriptivos
 
 3. **Tests** antes de commit:
+
    ```bash
    make test
    make test-coverage
    ```
 
 4. **Commit** con mensajes descriptivos:
+
    ```bash
    git commit -m "feat: agregar módulo de estimaciones CEPF"
    git commit -m "fix: corregir cálculo de disponibilidad de recursos"
    ```
 
 5. **Push** y crear Pull Request:
+
    ```bash
    git push origin feature/nombre-feature
    ```
@@ -671,6 +682,7 @@ Ver [docker/ML_README.md - Troubleshooting](docker/ML_README.md#troubleshooting)
 ### Code Review
 
 Todos los PRs requieren:
+
 - ✅ Tests pasando (CI green)
 - ✅ Cobertura de código >80%
 - ✅ Code review aprobado
@@ -703,9 +715,9 @@ make createsuperuser
 make logs
 ```
 
-**Backend:** http://localhost:8000
-**Frontend:** http://localhost:5173
-**Admin:** http://localhost:8000/admin
+**Backend:** <http://localhost:8000>
+**Frontend:** <http://localhost:5173>
+**Admin:** <http://localhost:8000/admin>
 
 ---
 
