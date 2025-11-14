@@ -1,0 +1,33 @@
+# ============================================================================
+# DOCKER COMPOSE ML - DESARROLLO CON MACHINE LEARNING
+# ============================================================================
+# Este archivo es para desarrolladores que trabajan con el módulo de ML.
+# Uso: docker compose -f compose.yml -f compose.override.yml -f compose.ml.yml up
+
+services:
+  # ============================================================================
+  # Django Web - Con dependencias de ML
+  # ============================================================================
+  web:
+    build:
+      args:
+        INSTALL_DEV: "true"
+        INSTALL_ML: "true"
+
+  # ============================================================================
+  # Celery Worker - Con dependencias de ML
+  # ============================================================================
+  celery_worker:
+    build:
+      args:
+        INSTALL_DEV: "true"
+        INSTALL_ML: "true"
+
+  # ============================================================================
+  # Celery Beat - Con dependencias de ML
+  # ============================================================================
+  celery_beat:
+    build:
+      args:
+        INSTALL_DEV: "true"
+        INSTALL_ML: "true"
