@@ -4,9 +4,9 @@
 
 ## Metadata
 
-- **Versión del documento**: 1.0
+- **Versión del documento**: 1.1
 - **Fecha de creación**: 2024-11-14
-- **Última actualización**: 2024-11-14
+- **Última actualización**: 2024-11-17
 - **Arquitecto principal**: Juanje Márquez - 10Code
 - **Revisores técnicos**: Pendiente
 - **Estado**: Living Document
@@ -522,23 +522,1400 @@ class ProjectSelector:
 
 ---
 
-## 6-15. [Secciones Restantes]
+## 6. Base de Datos y Modelo de Datos
 
-Por limitaciones de longitud, las siguientes secciones están completamente documentadas en el archivo completo:
+### 6.1 Estrategia de Datos
 
-6. **Base de Datos y Modelo de Datos**
-7. **Seguridad**
-8. **Performance y Escalabilidad**
-9. **Testing Strategy** (70-20-10)
-10. **Deployment e Infraestructura**
-11. **Monitoreo y Observabilidad**
-12. **Decisiones Técnicas Pendientes**
-13. **Referencias y Recursos**
-14. **Historial de Cambios**
-15. **Aprobaciones**
+#### PostgreSQL como Base de Datos Principal
+
+**Justificación técnica:**
+
+- **JSONB nativo**: Flexibilidad para datos semi-estructurados (configuraciones, metadatos)
+- **Full-text search**: Búsquedas avanzadas sin necesidad de ElasticSearch
+- **Robustez ACID**: Garantía de integridad transaccional crítica para datos financieros
+- **Escalabilidad**: Read replicas y particionado horizontal disponibles
+- **Madurez del ORM Django**: Excelente soporte con Django ORM
+
+#### Redis como Cache y Message Broker
+
+**Usos principales:**
+
+- Cache de sesiones de usuario
+- Cache de consultas frecuentes (dashboards, listas)
+- Broker de Celery para tareas asíncronas
+- Rate limiting de APIs y endpoints críticos
+- Cache de permisos de usuario
+
+### 6.2 Principios de Diseño de Datos
+
+#### Normalización con Pragmatismo
+
+- **3FN como base**: Normalización hasta tercera forma normal por defecto
+- **Desnormalización estratégica**: Para dashboards y reportes de alto rendimiento
+- **JSONB para flexibilidad**: Metadatos, configuraciones, audit trails
+- **Soft deletes**: Campos `deleted_at` para trazabilidad, no borrados físicos
+
+#### Modelos por Módulo
+
+Cada app Django tiene sus propios modelos siguiendo DDD (Domain-Driven Design). Los modelos representan entidades de negocio claras y autocontenidas.
+
+**Referencia detallada**: Ver FSDs de cada módulo para estructura completa de modelos.
+
+### 6.3 Patrones de Modelado
+
+#### Modelo Base Abstracto
+
+```python
+# apps/core/models.py
+from django.db import models
+from django.utils import timezone
+
+class TimestampedModel(models.Model):
+    """Modelo base con timestamps automáticos."""
+    created_at = models.DateTimeField(default=timezone.now, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class SoftDeletableModel(TimestampedModel):
+    """Modelo base con soft delete."""
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+    def soft_delete(self):
+        self.deleted_at = timezone.now()
+        self.save()
+
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
+```
+
+#### Choices como Enums
+
+```python
+class Project(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Borrador'
+        ACTIVE = 'active', 'Activo'
+        COMPLETED = 'completed', 'Completado'
+        ARCHIVED = 'archived', 'Archivado'
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        db_index=True
+    )
+```
+
+#### Campos JSONB para Flexibilidad
+
+```python
+class ProjectConfig(models.Model):
+    project = models.OneToOneField(Project, on_delete=models.CASCADE)
+
+    # Configuraciones específicas por metodología
+    config = models.JSONField(default=dict)
+    # Ejemplo: {'sprint_duration': 14, 'velocity': 40, 'capacity_buffer': 0.15}
+
+    # Metadatos extensibles
+    metadata = models.JSONField(default=dict)
+```
+
+### 6.4 Migraciones
+
+#### Estrategia de Migraciones
+
+- **Migraciones automáticas**: Usar `makemigrations` para cambios de esquema
+- **Migraciones de datos**: Separar en archivos distintos con `RunPython`
+- **Nombres descriptivos**: `--name` con descripción clara del cambio
+- **Reversibilidad**: Implementar `reverse_code` en migraciones de datos cuando sea posible
+- **Testing**: Probar migraciones en copia de producción antes de deploy
+
+#### Ejemplo de Migración de Datos
+
+```python
+# apps/projects/migrations/0005_populate_default_config.py
+
+def populate_default_config(apps, schema_editor):
+    Project = apps.get_model('projects', 'Project')
+    for project in Project.objects.filter(config__isnull=True):
+        project.config = {
+            'sprint_duration': 14,
+            'velocity': 0,
+            'capacity_buffer': 0.15
+        }
+        project.save()
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ('projects', '0004_project_config'),
+    ]
+
+    operations = [
+        migrations.RunPython(populate_default_config, reverse_code=migrations.RunPython.noop),
+    ]
+```
+
+### 6.5 Indexación y Optimización
+
+#### Índices Estratégicos
+
+```python
+class Project(models.Model):
+    # ...
+
+    class Meta:
+        indexes = [
+            # Queries frecuentes por status y fecha
+            models.Index(fields=['status', '-created_at']),
+
+            # Búsquedas por cliente
+            models.Index(fields=['client', 'status']),
+
+            # Filtros de equipo
+            models.Index(fields=['created_by', 'status']),
+        ]
+```
+
+#### Constraints de Base de Datos
+
+```python
+class ProjectMember(models.Model):
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    allocation_percentage = models.IntegerField()
+
+    class Meta:
+        # Evitar duplicados
+        constraints = [
+            models.UniqueConstraint(
+                fields=['project', 'user'],
+                name='unique_project_member'
+            ),
+            models.CheckConstraint(
+                check=models.Q(allocation_percentage__gte=0) & models.Q(allocation_percentage__lte=100),
+                name='valid_allocation_percentage'
+            ),
+        ]
+```
 
 ---
 
-**Fin del SAD - Intranet 10Code v1.0**
+## 7. Seguridad
 
-*Documento completo disponible con todas las secciones detalladas.*
+### 7.1 Autenticación y Autorización
+
+#### OAuth 2.0 con Google Workspace
+
+**Flujo de autenticación:**
+
+1. Usuario visita `/login`
+2. Redirección a Google OAuth (scope: email, profile)
+3. Google valida credenciales y retorna token
+4. Backend verifica dominio `@10code.es`
+5. Crea sesión Django y redirige a dashboard
+
+**Implementación:**
+
+```python
+# apps/accounts/views.py
+from django.contrib.auth import login
+from allauth.socialaccount.models import SocialAccount
+
+def google_callback(request):
+    # django-allauth maneja el flujo OAuth
+    social_account = SocialAccount.objects.get(user=request.user)
+
+    # Validar dominio corporativo
+    email = social_account.extra_data.get('email')
+    if not email.endswith('@10code.es'):
+        raise PermissionDenied("Solo usuarios @10code.es")
+
+    login(request, request.user)
+    return redirect('dashboard')
+```
+
+#### RBAC (Role-Based Access Control)
+
+Sistema de permisos granular basado en roles:
+
+```python
+# apps/accounts/permissions.py
+
+class Permission:
+    # Proyectos
+    VIEW_PROJECT = 'projects.view_project'
+    ADD_PROJECT = 'projects.add_project'
+    CHANGE_PROJECT = 'projects.change_project'
+    DELETE_PROJECT = 'projects.delete_project'
+
+    # RR.HH.
+    VIEW_TIMETRACKING = 'timetracking.view_timeentry'
+    APPROVE_TIMETRACKING = 'timetracking.approve_timeentry'
+
+# Verificación en views
+@login_required
+def projects_create(request):
+    if not request.user.has_perm('projects.add_project'):
+        raise PermissionDenied()
+    # ...
+```
+
+**Patrón "Props como Permisos":**
+
+```python
+# apps/projects/views.py
+def projects_index(request):
+    return render(request, 'Projects/Index', props={
+        'projects': serialize_projects(projects),
+        'permissions': {
+            'can_create': request.user.has_perm('projects.add_project'),
+            'can_edit': request.user.has_perm('projects.change_project'),
+            'can_delete': request.user.has_perm('projects.delete_project'),
+        }
+    })
+```
+
+### 7.2 Protección de Datos
+
+#### RGPD y Protección de Datos Sensibles
+
+**Datos sensibles identificados:**
+
+- Información de salud (bajas médicas)
+- Datos salariales
+- Fichajes y control horario (retención 4 años)
+- Datos personales de empleados
+
+**Medidas implementadas:**
+
+1. **Encriptación en tránsito**: HTTPS obligatorio (TLS 1.3)
+2. **Encriptación en reposo**: Campos sensibles encriptados en BD
+3. **Acceso granular**: Permisos estrictos por rol
+4. **Auditoría completa**: Log de accesos a datos sensibles
+5. **Retención de datos**: Políticas de retención por tipo de dato
+6. **Derecho al olvido**: Procedimiento de anonimización
+
+#### Auditoría y Logging
+
+```python
+# apps/core/audit.py
+import structlog
+
+audit_logger = structlog.get_logger('audit')
+
+def log_data_access(user, resource_type, resource_id, action):
+    """Log acceso a datos sensibles."""
+    audit_logger.info(
+        'data_access',
+        user_id=user.id,
+        user_email=user.email,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        action=action,
+        ip_address=get_client_ip(request),
+        timestamp=timezone.now().isoformat()
+    )
+```
+
+### 7.3 Seguridad de Aplicación
+
+#### Protección contra Vulnerabilidades Comunes
+
+**OWASP Top 10:**
+
+1. **SQL Injection**: Django ORM con parametrización automática
+2. **XSS**: React escapa HTML automáticamente; sanitización en backend para HTML permitido
+3. **CSRF**: Django CSRF middleware + Inertia maneja tokens automáticamente
+4. **Autenticación rota**: OAuth con Google + sesiones Django seguras
+5. **Exposición de datos**: Serializers explícitos, no exponer modelos directamente
+6. **Control de acceso**: RBAC granular verificado en backend
+7. **Configuración incorrecta**: Secrets en variables de entorno, no en código
+8. **Deserialización insegura**: Validación estricta de JSON inputs
+9. **Componentes vulnerables**: Dependabot para updates automáticos
+10. **Logging insuficiente**: Auditoría completa con structured logging
+
+#### Validación de Inputs
+
+```python
+# apps/projects/services.py
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
+class ProjectService:
+    @staticmethod
+    def create_project(*, name: str, budget: Decimal, **kwargs):
+        # Validaciones estrictas
+        if len(name) > 200:
+            raise ValidationError("Nombre demasiado largo")
+
+        if budget < 0:
+            raise ValidationError("Presupuesto no puede ser negativo")
+
+        # Sanitización
+        name = name.strip()
+
+        # ...
+```
+
+### 7.4 Gestión de Secrets
+
+#### Variables de Entorno
+
+```python
+# config/settings/base.py
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# ✅ BIEN - Secrets desde entorno
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+DATABASE_PASSWORD = os.environ['DB_PASSWORD']
+GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
+
+# ❌ MAL - Nunca hardcodear secrets
+SECRET_KEY = 'hardcoded-secret-key'  # NUNCA!
+```
+
+#### Rotación de Secrets
+
+- **Secrets críticos rotados cada 90 días**
+- **Tokens de API con expiración**
+- **Passwords nunca almacenados en plain text**
+
+---
+
+## 8. Performance y Escalabilidad
+
+### 8.1 Objetivos de Performance
+
+| Métrica | Target MVP | Target Producción |
+|---------|-----------|-------------------|
+| Tiempo respuesta p95 (vistas) | < 500ms | < 300ms |
+| Tiempo respuesta p95 (dashboards) | < 2s | < 1s |
+| Throughput | 50 req/s | 200 req/s |
+| Usuarios concurrentes | 20 | 50 |
+| Uptime | 99% | 99.9% |
+
+### 8.2 Estrategias de Optimización
+
+#### Optimización de Queries (CRÍTICO)
+
+**Patrón obligatorio: select_related / prefetch_related**
+
+```python
+# ❌ MAL - N+1 queries
+projects = Project.objects.all()
+for p in projects:
+    print(p.created_by.email)  # Query por cada proyecto!
+
+# ✅ BIEN - 1 query
+projects = Project.objects.select_related('created_by')
+for p in projects:
+    print(p.created_by.email)
+```
+
+**Prefetch para relaciones complejas:**
+
+```python
+from django.db.models import Prefetch
+
+projects = Project.objects.select_related(
+    'created_by',
+    'client'
+).prefetch_related(
+    Prefetch(
+        'members',
+        queryset=ProjectMember.objects.select_related('user')
+    ),
+    'tasks__assigned_to'
+)
+```
+
+#### Caché Estratégico con Redis
+
+**Niveles de caché:**
+
+1. **Template fragment cache**: Para componentes costosos
+2. **Query cache**: Para queries frecuentes e inmutables
+3. **Session cache**: Sesiones de usuario en Redis
+4. **API response cache**: Para endpoints públicos o semi-públicos
+
+**Ejemplo de caché:**
+
+```python
+from django.core.cache import cache
+
+def get_dashboard_stats(user_id: int):
+    cache_key = f'dashboard_stats_{user_id}'
+    stats = cache.get(cache_key)
+
+    if stats is None:
+        # Query costoso
+        stats = calculate_stats(user_id)
+        cache.set(cache_key, stats, timeout=300)  # 5 minutos
+
+    return stats
+```
+
+#### Paginación Obligatoria
+
+```python
+from django.core.paginator import Paginator
+
+def get_projects_list(request):
+    projects = Project.objects.all().order_by('-created_at')
+    paginator = Paginator(projects, 25)  # 25 por página
+    page = paginator.get_page(request.GET.get('page', 1))
+
+    return render(request, 'Projects/Index', props={
+        'projects': serialize_projects(page.object_list),
+        'pagination': {
+            'current': page.number,
+            'total_pages': paginator.num_pages,
+            'has_next': page.has_next(),
+            'has_previous': page.has_previous(),
+        }
+    })
+```
+
+### 8.3 Tareas Asíncronas con Celery
+
+#### Casos de Uso para Celery
+
+- **Sincronizaciones externas**: ODOO, GitHub, Google Drive
+- **Generación de reportes**: PDFs, Excel, análisis pesados
+- **Procesamiento de datos**: Cálculos ML, agregaciones masivas
+- **Envío de emails**: Notificaciones, alertas
+- **Limpieza de datos**: Tareas de mantenimiento
+
+**Ejemplo de tarea Celery:**
+
+```python
+# apps/projects/tasks.py
+from celery import shared_task
+import logging
+
+logger = logging.getLogger(__name__)
+
+@shared_task(bind=True, max_retries=3)
+def sync_github_repository(self, project_id: int):
+    """Sincronizar proyecto con repositorio GitHub."""
+    try:
+        project = Project.objects.get(id=project_id)
+        # Lógica de sincronización...
+        logger.info(f"GitHub sync completado: {project_id}")
+    except Exception as exc:
+        logger.error(f"Error syncing GitHub: {exc}")
+        raise self.retry(exc=exc, countdown=60)
+```
+
+**Celery Beat para tareas programadas:**
+
+```python
+# config/settings/base.py
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'sync-odoo-daily': {
+        'task': 'apps.integrations.odoo.tasks.sync_odoo_data',
+        'schedule': crontab(hour=2, minute=0),  # 2 AM diario
+    },
+    'cleanup-old-sessions': {
+        'task': 'apps.core.tasks.cleanup_expired_sessions',
+        'schedule': crontab(hour=3, minute=0),
+    },
+}
+```
+
+### 8.4 Escalabilidad Futura
+
+#### Escalado Horizontal
+
+**Preparación para crecimiento:**
+
+- **Stateless application**: Sesiones en Redis, no en memoria
+- **Read replicas PostgreSQL**: Para queries de solo lectura
+- **Load balancer (Nginx)**: Distribuir carga entre múltiples instancias Django
+- **CDN para estáticos**: Servir JS/CSS/imágenes desde CDN
+
+#### Monitoring de Performance
+
+```python
+# Middleware para medir performance
+import time
+from django.utils.deprecation import MiddlewareMixin
+
+class PerformanceMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        request.start_time = time.time()
+
+    def process_response(self, request, response):
+        if hasattr(request, 'start_time'):
+            duration = time.time() - request.start_time
+            logger.info(
+                'request_duration',
+                path=request.path,
+                method=request.method,
+                duration_ms=duration * 1000,
+                status_code=response.status_code
+            )
+        return response
+```
+
+---
+
+## 9. Testing Strategy
+
+### 9.1 Pirámide de Tests
+
+```txt
+           /\
+          /  \        10% - E2E Tests (Playwright)
+         /____\       Critical user journeys
+        /      \
+       /        \     20% - Integration Tests (pytest-django)
+      /__________\    View + Service + DB integration
+     /            \
+    /              \  70% - Unit Tests (pytest)
+   /________________\ Services, Selectors, Utils
+```
+
+### 9.2 Unit Tests (70%)
+
+**Objetivo**: Testear lógica de negocio aislada.
+
+**Template de test de Service:**
+
+```python
+# apps/projects/tests/test_services.py
+import pytest
+from apps.projects.services import ProjectService
+from apps.projects.tests.factories import UserFactory
+
+@pytest.mark.django_db
+class TestProjectService:
+
+    def test_create_project_success(self):
+        user = UserFactory(permissions=['projects.add_project'])
+
+        project = ProjectService.create_project(
+            name="Test Project",
+            client="Test Client",
+            methodology="scrum",
+            created_by=user
+        )
+
+        assert project.id is not None
+        assert project.name == "Test Project"
+        assert project.members.filter(user=user, role='project_manager').exists()
+
+    def test_create_project_without_permission(self):
+        user = UserFactory()  # Sin permisos
+
+        with pytest.raises(PermissionDenied):
+            ProjectService.create_project(
+                name="Test",
+                client="Client",
+                methodology="scrum",
+                created_by=user
+            )
+```
+
+**Template de test de Selector:**
+
+```python
+# apps/projects/tests/test_selectors.py
+import pytest
+from apps.projects.selectors import get_projects_list
+from apps.projects.tests.factories import ProjectFactory, UserFactory
+
+@pytest.mark.django_db
+class TestProjectSelectors:
+
+    def test_get_projects_list_optimized(self):
+        user = UserFactory()
+        ProjectFactory.create_batch(5, created_by=user)
+
+        # Verificar que no hay N+1 queries
+        with pytest.assertNumQueries(2):  # 1 para projects + 1 para related
+            projects = list(get_projects_list(user=user))
+            for p in projects:
+                _ = p.created_by.email  # No debe generar query
+
+    def test_get_projects_list_filters_by_permission(self):
+        user = UserFactory()
+        other_user = UserFactory()
+
+        my_project = ProjectFactory(created_by=user)
+        other_project = ProjectFactory(created_by=other_user)
+
+        projects = get_projects_list(user=user)
+
+        assert my_project in projects
+        assert other_project not in projects
+```
+
+### 9.3 Integration Tests (20%)
+
+**Objetivo**: Testear flujos completos view → service → database.
+
+```python
+# apps/projects/tests/test_views.py
+import pytest
+from django.urls import reverse
+
+@pytest.mark.django_db
+class TestProjectViews:
+
+    def test_create_project_integration(self, client, authenticated_user):
+        url = reverse('projects.store')
+        data = {
+            'name': 'New Project',
+            'client': 'Client X',
+            'methodology': 'scrum'
+        }
+
+        response = client.post(url, data)
+
+        assert response.status_code == 302  # Redirect after create
+        assert Project.objects.filter(name='New Project').exists()
+```
+
+### 9.4 E2E Tests (10%)
+
+**Objetivo**: Testear flujos críticos de usuario end-to-end.
+
+```javascript
+// tests/e2e/projects.spec.ts
+import { test, expect } from '@playwright/test'
+
+test.describe('Project Management', () => {
+  test('should create new project', async ({ page }) => {
+    await page.goto('/login')
+    await page.fill('input[name="email"]', 'test@10code.es')
+    await page.click('button[type="submit"]')
+
+    await page.goto('/projects/create')
+    await page.fill('input[name="name"]', 'E2E Test Project')
+    await page.fill('input[name="client"]', 'Test Client')
+    await page.selectOption('select[name="methodology"]', 'scrum')
+    await page.click('button[type="submit"]')
+
+    await expect(page).toHaveURL(/\/projects\/\d+/)
+    await expect(page.locator('h1')).toContainText('E2E Test Project')
+  })
+})
+```
+
+### 9.5 Test Fixtures con Factory Boy
+
+```python
+# apps/projects/tests/factories.py
+import factory
+from apps.projects.models import Project, ProjectMember
+from apps.accounts.tests.factories import UserFactory
+
+class ProjectFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Project
+
+    name = factory.Sequence(lambda n: f'Project {n}')
+    client = factory.Faker('company')
+    methodology = 'scrum'
+    status = Project.Status.ACTIVE
+    created_by = factory.SubFactory(UserFactory)
+
+class ProjectMemberFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProjectMember
+
+    project = factory.SubFactory(ProjectFactory)
+    user = factory.SubFactory(UserFactory)
+    role = 'developer'
+    allocation_percentage = 100
+```
+
+### 9.6 Cobertura de Tests
+
+**Objetivo mínimo**: 80% de cobertura en lógica crítica.
+
+```bash
+# Ejecutar tests con cobertura
+pytest --cov=apps --cov-report=html --cov-report=term-missing
+
+# Ver reporte HTML
+open htmlcov/index.html
+```
+
+**Áreas críticas con 100% cobertura obligatoria:**
+
+- Services con lógica de negocio compleja
+- Cálculos financieros
+- Validaciones de seguridad
+- Procesamiento de datos sensibles (fichajes, nóminas)
+
+---
+
+## 10. Deployment e Infraestructura
+
+### 10.1 Arquitectura de Deployment
+
+```txt
+┌─────────────────────────────────────────────┐
+│               Internet                       │
+└──────────────────┬──────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────┐
+│         Nginx (Reverse Proxy + SSL)         │
+│  - Terminación SSL (TLS 1.3)                │
+│  - Servir estáticos desde /static/          │
+│  - Load balancing (futuro)                  │
+└──────────────────┬──────────────────────────┘
+                   │
+┌──────────────────▼──────────────────────────┐
+│      Django + Gunicorn (4 workers)          │
+│  - Aplicación principal                      │
+│  - Inertia.js renderer                       │
+└─────┬────────────────────────────────┬──────┘
+      │                                │
+      ▼                                ▼
+┌─────────────────┐          ┌─────────────────┐
+│  PostgreSQL 15  │          │    Redis 7      │
+│  - Datos        │          │  - Cache        │
+│  - Backups      │          │  - Sessions     │
+│    diarios      │          │  - Celery queue │
+└─────────────────┘          └─────────────────┘
+                                      │
+                                      ▼
+                             ┌─────────────────┐
+                             │  Celery Workers │
+                             │  - Tasks async  │
+                             │  - Beat scheduler│
+                             └─────────────────┘
+```
+
+### 10.2 Docker Multi-Stage Build
+
+**Estrategia de containers:**
+
+```dockerfile
+# Dockerfile (multi-stage)
+
+# Stage 1: Build frontend
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Python dependencies
+FROM python:3.11-slim AS python-builder
+WORKDIR /app
+RUN pip install uv
+COPY pyproject.toml ./
+RUN uv pip install --system -e .
+
+# Stage 3: Final image
+FROM python:3.11-slim
+WORKDIR /app
+
+# Copiar dependencias Python
+COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+
+# Copiar frontend compilado
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+
+# Copiar código aplicación
+COPY apps/ ./apps/
+COPY config/ ./config/
+COPY manage.py ./
+
+# Collectstatic
+RUN python manage.py collectstatic --noinput
+
+EXPOSE 8000
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+```
+
+### 10.3 Docker Compose para Desarrollo
+
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: intranet_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/intranet_db
+      - REDIS_URL=redis://redis:6379/0
+
+  celery:
+    build: .
+    command: celery -A config worker -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    build: .
+    command: celery -A config beat -l info
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data:
+```
+
+### 10.4 CI/CD con GitHub Actions
+
+```yaml
+# .github/workflows/ci.yml
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install --system -e ".[dev]"
+
+      - name: Run linters
+        run: |
+          ruff check apps/
+          black --check apps/
+
+      - name: Run tests
+        run: pytest --cov=apps --cov-report=xml
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost/test_db
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t intranet:${{ github.sha }} .
+
+      - name: Push to registry
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push intranet:${{ github.sha }}
+```
+
+### 10.5 Configuración de Entornos
+
+#### Settings por Entorno
+
+```python
+# config/settings/
+├── __init__.py
+├── base.py          # Configuración común
+├── development.py   # Local development
+├── testing.py       # Tests
+├── staging.py       # Staging
+└── production.py    # Producción
+
+# config/settings/production.py
+from .base import *
+
+DEBUG = False
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+
+# Seguridad
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+
+# Base de datos
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ['DB_NAME'],
+        'USER': os.environ['DB_USER'],
+        'PASSWORD': os.environ['DB_PASSWORD'],
+        'HOST': os.environ['DB_HOST'],
+        'PORT': os.environ.get('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 600,
+    }
+}
+```
+
+### 10.6 Backups y Disaster Recovery
+
+#### Estrategia de Backups
+
+- **Base de datos**: Backups diarios automáticos, retención 30 días
+- **Archivos estáticos**: Sincronizados a bucket S3/similar
+- **Configuración**: Versionada en Git
+- **Secrets**: Almacenados en gestor de secrets (AWS Secrets Manager, Vault)
+
+**Script de backup:**
+
+```bash
+#!/bin/bash
+# scripts/backup_db.sh
+
+BACKUP_DIR="/backups/postgresql"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+DB_NAME="intranet_db"
+
+pg_dump -Fc $DB_NAME > "$BACKUP_DIR/backup_${TIMESTAMP}.dump"
+
+# Mantener solo últimos 30 días
+find $BACKUP_DIR -name "backup_*.dump" -mtime +30 -delete
+```
+
+---
+
+## 11. Monitoreo y Observabilidad
+
+### 11.1 Logging Estructurado
+
+#### Configuración de Logging
+
+```python
+# config/settings/base.py
+import structlog
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'json': {
+            '()': structlog.stdlib.ProcessorFormatter,
+            'processor': structlog.processors.JSONRenderer(),
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
+        },
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/app.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 10,
+            'formatter': 'json',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+        },
+        'audit': {
+            'handlers': ['file'],
+            'level': 'INFO',
+        },
+    },
+}
+
+# Configurar structlog
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    context_class=dict,
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    cache_logger_on_first_use=True,
+)
+```
+
+#### Uso de Logging Estructurado
+
+```python
+import structlog
+
+logger = structlog.get_logger(__name__)
+
+class ProjectService:
+    @staticmethod
+    def create_project(...):
+        logger.info(
+            'project.create.started',
+            user_id=created_by.id,
+            project_name=name,
+            client=client
+        )
+
+        # ... lógica ...
+
+        logger.info(
+            'project.create.completed',
+            project_id=project.id,
+            duration_ms=duration
+        )
+```
+
+### 11.2 Métricas y Monitoring
+
+#### Métricas Clave a Monitorear
+
+**Application metrics:**
+
+- Request latency (p50, p95, p99)
+- Request throughput (req/s)
+- Error rate (% requests con 5xx)
+- Active users concurrentes
+- Background job queue size
+
+**Infrastructure metrics:**
+
+- CPU usage
+- Memory usage
+- Disk I/O
+- Network I/O
+- Database connections pool
+
+**Business metrics:**
+
+- Proyectos activos
+- Horas registradas diarias
+- Usuarios activos diarios/semanales
+- Oportunidades comerciales por estado
+
+### 11.3 Alertas
+
+#### Configuración de Alertas Críticas
+
+```yaml
+# alerts.yml (ejemplo conceptual)
+alerts:
+  - name: high_error_rate
+    condition: error_rate > 5%
+    duration: 5m
+    severity: critical
+    notify: ['email', 'discord']
+
+  - name: slow_response_time
+    condition: p95_latency > 2s
+    duration: 10m
+    severity: warning
+    notify: ['discord']
+
+  - name: database_connections_high
+    condition: db_connections > 80%
+    duration: 5m
+    severity: warning
+    notify: ['email']
+
+  - name: celery_queue_backed_up
+    condition: celery_queue_size > 1000
+    duration: 15m
+    severity: warning
+    notify: ['discord']
+```
+
+### 11.4 Herramientas de Observabilidad
+
+**Para consideración futura:**
+
+- **Sentry**: Error tracking y performance monitoring
+- **Prometheus + Grafana**: Métricas y dashboards
+- **ELK Stack** o **Loki**: Centralización de logs
+- **Django Debug Toolbar**: Debugging en desarrollo
+- **django-silk**: Profiling de requests en staging
+
+---
+
+## 12. Decisiones Técnicas y ADRs
+
+Este proyecto documenta decisiones arquitectónicas significativas mediante **Architecture Decision Records (ADRs)**. Los ADRs son documentos inmutables que registran el contexto, opciones consideradas y justificación de decisiones técnicas importantes.
+
+### 12.1 ADRs Pendientes de Creación
+
+Los siguientes ADRs están referenciados en este SAD y deben ser creados:
+
+| ID | Decisión | Prioridad | Estado |
+|----|----------|-----------|--------|
+| **ADR-001** | Monolito Modular vs Microservicios | Alta | Pendiente |
+| **ADR-002** | Django + Inertia.js vs API REST + SPA separado | Alta | Pendiente |
+| **ADR-003** | PostgreSQL vs MySQL vs MongoDB | Media | Pendiente |
+| **ADR-004** | uv vs pip vs poetry como gestor de dependencias | Baja | Pendiente |
+| **ADR-005** | Tiptap + WeasyPrint para documentación | Media | Pendiente |
+| **ADR-006** | Celery + Redis vs RQ vs dramatiq | Media | Pendiente |
+| **ADR-007** | OpenRouter vs OpenAI directo vs Anthropic directo | Media | Pendiente |
+| **ADR-008** | Service Layer Pattern como patrón obligatorio | Alta | Pendiente |
+
+### 12.2 Ubicación de ADRs
+
+```txt
+docs/
+└── product_docs/
+    └── adr/
+        ├── 001-monolith-vs-microservices.md
+        ├── 002-django-inertia-choice.md
+        ├── 003-postgresql-choice.md
+        ├── 004-uv-package-manager.md
+        ├── 005-tiptap-weasyprint-docs.md
+        ├── 006-celery-redis-choice.md
+        ├── 007-openrouter-llm-gateway.md
+        ├── 008-service-layer-pattern.md
+        └── template-adr.md
+```
+
+### 12.3 Próximos Pasos
+
+Los ADRs se crearán en la siguiente fase de consolidación de documentación, siguiendo la plantilla definida en `docs/product_docs/.framework/templates/ADR_template.md`.
+
+**Referencia**: Ver `/docs/product_docs/.framework/marco-documentacion-tecnica-10code.md` sección 5 para guía completa de ADRs.
+
+---
+
+## 13. Referencias y Recursos
+
+### 13.1 Documentación del Proyecto
+
+**Documentos maestros:**
+
+- **PRD**: `docs/product_docs/PRD_Intranet_10Code.md` - Requisitos de producto
+- **SAD**: Este documento - Arquitectura de software
+- **Marco de documentación**: `docs/product_docs/.framework/marco-documentacion-tecnica-10code.md`
+- **Reglas de desarrollo**: `CLAUDE.md` - Reglas para agentes IA
+
+**Reglas arquitectónicas:**
+
+- `.rules/ARCHITECTURE_RULES.md` - Comunicación entre módulos
+- `.rules/DJANGO_PATTERNS.md` - Patrones Django obligatorios
+- `.rules/INERTIA_FRONTEND.md` - Patrones frontend React + Inertia
+
+**FSDs por módulo** (a crear):
+
+- `docs/product_docs/modules/authentication/FSD-Authentication.md`
+- `docs/product_docs/modules/hr/FSD-TimeTracking.md`
+- `docs/product_docs/modules/commercial/FSD-Commercial.md`
+- `docs/product_docs/modules/projects/FSD-Projects.md`
+- _(otros módulos según priorización)_
+
+### 13.2 Documentación Técnica Externa
+
+**Django:**
+
+- Django 5 Documentation: https://docs.djangoproject.com/en/5.0/
+- Django ORM Performance: https://docs.djangoproject.com/en/5.0/topics/db/optimization/
+- Django Security: https://docs.djangoproject.com/en/5.0/topics/security/
+
+**Inertia.js:**
+
+- Inertia.js Documentation: https://inertiajs.com/
+- React Adapter: https://inertiajs.com/client-side-setup#react
+
+**React y Frontend:**
+
+- React 18 Documentation: https://react.dev/
+- TypeScript Handbook: https://www.typescriptlang.org/docs/
+- shadcn/ui Components: https://ui.shadcn.com/
+- Tailwind CSS: https://tailwindcss.com/docs
+
+**Base de Datos:**
+
+- PostgreSQL 15 Documentation: https://www.postgresql.org/docs/15/
+- Django + PostgreSQL Best Practices: https://www.postgresql.org/docs/15/django.html
+
+**Testing:**
+
+- pytest Documentation: https://docs.pytest.org/
+- pytest-django: https://pytest-django.readthedocs.io/
+- Playwright: https://playwright.dev/
+
+**Deployment:**
+
+- Docker Documentation: https://docs.docker.com/
+- Gunicorn: https://docs.gunicorn.org/
+- Nginx: https://nginx.org/en/docs/
+
+### 13.3 Libros y Recursos de Referencia
+
+- **Two Scoops of Django**: Best practices de Django
+- **Domain-Driven Design (Eric Evans)**: Fundamentos de DDD
+- **Clean Architecture (Robert C. Martin)**: Principios arquitectónicos
+- **The Pragmatic Programmer**: Best practices generales
+
+### 13.4 Herramientas de Desarrollo
+
+**Backend:**
+
+- Python 3.11+
+- Django 5.0+
+- django-inertia
+- Celery 5.3+
+- pytest
+
+**Frontend:**
+
+- Node.js 20+
+- React 18+
+- TypeScript 5+
+- Vite 6+
+- Playwright
+
+**Infraestructura:**
+
+- Docker & Docker Compose
+- PostgreSQL 15
+- Redis 7
+- Nginx
+
+---
+
+## 14. Historial de Cambios
+
+| Versión | Fecha | Autor | Cambios |
+|---------|-------|-------|---------|
+| **1.0** | 2024-11-14 | Juanje Márquez | Creación inicial del SAD (secciones 1-5) |
+| **1.1** | 2024-11-17 | Claude (Agent) | Completado secciones 6-15: Base de Datos, Seguridad, Performance, Testing, Deployment, Monitoreo, ADRs, Referencias |
+
+### Próximas Actualizaciones Previstas
+
+- **v1.2**: Creación de ADRs 001-008 referenciados
+- **v1.3**: Actualización tras implementación del módulo de autenticación (primer FSD)
+- **v2.0**: Revisión completa tras finalización del MVP
+
+---
+
+## 15. Aprobaciones
+
+### Estado de Aprobación
+
+- ✅ **Arquitecto Principal** (Juanje - 10Code): Aprobado para implementación
+- 🔲 **Tech Lead**: Pendiente de revisión (mismo rol que arquitecto en MVP)
+- 🔲 **Product Owner**: Pendiente de validación de alineación con PRD
+
+### Criterios de Aprobación
+
+Este documento se considera aprobado cuando:
+
+1. ✅ Coherencia verificada con PRD
+2. ✅ Alineación con reglas arquitectónicas (`.rules/`)
+3. ✅ Patrones definidos claramente para desarrollo
+4. ⏳ ADRs críticos creados (ADR-001, ADR-002, ADR-008)
+5. ⏳ Primer FSD creado usando este SAD como referencia
+
+### Vigencia
+
+Este SAD es un **living document** que evolucionará con el proyecto. Se revisará:
+
+- Tras completar cada fase del MVP
+- Cuando se tomen decisiones arquitectónicas significativas
+- Semestralmente para asegurar relevancia
+
+---
+
+## 16. Conclusión
+
+Este Software Architecture Document define la arquitectura técnica completa de la Intranet 10Code. Los principios y patrones aquí establecidos son **obligatorios** para mantener la coherencia, calidad y mantenibilidad del sistema.
+
+### Principios Clave a Recordar
+
+1. **Monolito Modular Majestuoso**: Simplicidad operativa con disciplina modular
+2. **Service Layer Pattern**: Obligatorio para toda lógica de negocio (80% de comunicación)
+3. **Inertia.js como puente**: SPA moderna sin complejidad de API REST separada
+4. **DDD y Bounded Contexts**: Cada app Django es un dominio autocontenido
+5. **Optimización de queries**: select_related/prefetch_related siempre
+6. **Testing obligatorio**: 80% cobertura mínima en lógica crítica
+7. **Seguridad by design**: RBAC, RGPD, auditoría completa
+
+### Documentos Complementarios
+
+- **Para requisitos funcionales**: Ver PRD
+- **Para implementación de módulos**: Ver FSDs específicos
+- **Para decisiones arquitectónicas**: Ver ADRs individuales
+- **Para desarrollo con IA**: Ver CLAUDE.md y `.rules/`
+
+### Contacto
+
+**Arquitecto Principal**: Juanje Márquez (10Code)
+**Última actualización**: 2024-11-17
+**Versión del documento**: 1.1
+
+---
+
+> **Fin del Software Architecture Document - Intranet 10Code v1.1**
+>
+> *Este SAD define el CÓMO técnico del sistema. Junto con el PRD (QUÉ y POR QUÉ), forma la base de documentación del proyecto.*
