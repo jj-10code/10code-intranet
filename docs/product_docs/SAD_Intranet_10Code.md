@@ -4,9 +4,9 @@
 
 ## Metadata
 
-- **Versión del documento**: 1.1
+- **Versión del documento**: 1.5
 - **Fecha de creación**: 2024-11-14
-- **Última actualización**: 2024-11-17
+- **Última actualización**: 2025-11-17
 - **Arquitecto principal**: Juanje Márquez - 10Code
 - **Revisores técnicos**: Pendiente
 - **Estado**: Living Document
@@ -38,14 +38,6 @@ Este SAD **NO** cubre:
 - ❌ Requisitos funcionales de negocio (ver PRD)
 - ❌ Manuales de usuario o documentación operativa
 - ❌ Historias de usuario específicas (ver FSDs)
-
-### 1.3 Referencias
-
-- **PRD**: [PRD_Intranet_10Code.md](./PRD_Intranet_10Code.md)
-- **ADRs relacionados**: Ver carpeta `/docs/adr/` (a crear durante desarrollo)
-- **Guía de desarrollo**: [intranet_dev_guide.md](./intranet_dev_guide.md)
-- **Reglas arquitectónicas**: [ARCHITECTURE_RULES.md](./ARCHITECTURE_RULES.md)
-- **Marco de documentación**: [marco-documentacion-tecnica-10code.md](./marco-documentacion-tecnica-10code.md)
 
 ---
 
@@ -137,12 +129,14 @@ C4Context
 
 ### 2.4 Decisiones Arquitectónicas Críticas
 
+Este proyecto documenta decisiones arquitectónicas significativas mediante **Architecture Decision Records (ADRs)**. Los ADRs son documentos inmutables que registran el contexto, opciones consideradas y justificación de decisiones técnicas importantes.
+
 Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/adr/`:
 
 | ID  | Decisión | Justificación Breve | Estado ADR |
 |-----|----------|---------------------|------------|
 | ADR-001 | **Monolito vs Microservicios** | Equipo pequeño, complejidad innecesaria, deployment simple | Pendiente |
-| ADR-002 | **Django + Inertia.js** | Elimina API REST duplicada, desarrollo más rápido, DX superior | Pendiente |
+| ADR-002 | **Django + inertia-django** | Elimina API REST duplicada, desarrollo más rápido, DX superior | Pendiente |
 | ADR-003 | **PostgreSQL** | JSONB para flexibilidad, robustez, excelente soporte Django ORM | Pendiente |
 | ADR-004 | **uv como gestor de dependencias** | 10-100x más rápido que pip, compatible con pyproject.toml | Pendiente |
 | ADR-005 | **Tiptap + WeasyPrint** | Editor moderno WYSIWYG, generación PDF server-side confiable | Pendiente |
@@ -159,23 +153,23 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 ```bash
 ┌─────────────────────────────────────────────────────────────┐
 │                      FRONTEND (Client)                       │
-│  React 18 + TypeScript + Inertia.js Client                  │
-│  UI: Tailwind CSS + shadcn/ui components                    │
+│  React 19 + TypeScript + Inertia.js Client                  │
+│  UI: Tailwind CSS 4 + shadcn/ui components                  │
 │  Editor: Tiptap (WYSIWYG/Markdown)                          │
-│  Build: Vite 6 (HMR, optimizado)                            │
+│  Build: Vite 7 (HMR, optimizado)                            │
 └─────────────────────────────────────────────────────────────┘
-                             ↕ (Props JSON via Inertia)
+                              ↕ (Props JSON via Inertia)
 ┌─────────────────────────────────────────────────────────────┐
 │                      BACKEND (Server)                        │
-│  Django 5 (Python 3.14+) + PostgreSQL 15                    │
-│  django-inertia (Adapter) + Django ORM                      │
+│  Django 5.2.8+ (Python 3.14+) + PostgreSQL 18              │
+│  inertia-django (Adapter) + Django ORM                      │
 │  Service Layer + Selector Pattern                           │
 │  django-allauth (Google OAuth)                              │
 └─────────────────────────────────────────────────────────────┘
-                             ↕
+                              ↕
 ┌─────────────────────────────────────────────────────────────┐
 │            ASYNC & CACHE (Background Tasks)                 │
-│  Celery 5 (workers) + Redis 7 (broker + cache)             │
+│  Celery 5.5.3+ (workers) + Redis 8.2 (broker + cache)       │
 │  Celery Beat (scheduled tasks)                              │
 └─────────────────────────────────────────────────────────────┘
                              ↕
@@ -201,15 +195,16 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 
 | Componente | Versión | Propósito | Justificación Técnica |
 |------------|---------|-----------|----------------------|
-| **Python** | 3.11+ | Lenguaje base | Type hints modernos, pattern matching, performance +25% vs 3.9 |
-| **Django** | 5.0+ | Framework web | ORM maduro, admin auto-generado, seguridad built-in, ecosistema rico |
-| **PostgreSQL** | 15+ | Base de datos relacional | JSONB nativo, full-text search, robustez ACID, escalabilidad horizontal futura |
+| **Python** | 3.14+ | Lenguaje base | Type hints modernos, pattern matching, performance superior, características más recientes |
+| **Django** | 5.2.8+ | Framework web | ORM maduro, admin auto-generado, seguridad built-in, ecosistema rico |
+| **PostgreSQL** | 18+ | Base de datos relacional | JSONB nativo, full-text search, robustez ACID, escalabilidad horizontal futura |
 | **uv** | 0.4+ | Gestor de dependencias | 10-100x más rápido que pip, compatible pyproject.toml, Rust-based |
-| **django-inertia** | 0.6+ | Adaptador Inertia.js | Puente Django ↔ React sin API REST, reduce complejidad |
-| **django-allauth** | 0.57+ | Autenticación OAuth | Google OAuth out-of-the-box, probado en producción |
-| **Celery** | 5.3+ | Task queue asíncrona | ETL, integraciones, emails, reportes pesados |
-| **Redis** | 7.2+ | Cache + Broker Celery | Performance, sesiones distribuidas, pub/sub |
-| **Gunicorn** | 21+ | WSGI server | Multi-worker, estable en producción, fácil configuración |
+| **inertia-django** | 1.2.0+ | Adaptador Inertia.js | Puente Django ↔ React sin API REST, reduce complejidad |
+| **django-allauth** | 65.13.0+ | Autenticación OAuth | Google OAuth out-of-the-box, probado en producción, versión actual estable |
+| **Celery** | 5.5.3+ | Task queue asíncrona | ETL, integraciones, emails, reportes pesados |
+| **Redis** | 8.2+ | Cache + Broker Celery | Performance, sesiones distribuidas, pub/sub |
+| **Gunicorn** | 23.0.0+ | WSGI server | Multi-worker, estable en producción, fácil configuración |
+| **Pydantic** | 2.8+ | Validación de datos | Type hints avanzados, validación automática, conversión de tipos, mejor DX |
 
 **Razón de Django sobre FastAPI/Flask:**
 
@@ -223,11 +218,11 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 
 | Componente | Versión | Propósito | Justificación Técnica |
 |------------|---------|-----------|----------------------|
-| **React** | 18+ | UI framework | Hooks, Suspense, Concurrent rendering, ecosistema masivo |
+| **React** | 19+ | UI framework | Hooks, Suspense, Concurrent rendering, ecosistema masivo |
 | **TypeScript** | 5+ | Tipado estático | Menos bugs en runtime, IntelliSense, refactoring seguro |
-| **Inertia.js** | 2.0+ | SPA sin API tradicional | Elimina API REST separada, simplifica stack, mejor DX |
-| **Vite** | 6+ | Build tool & dev server | HMR instantáneo, builds optimizados, ESM nativo |
-| **Tailwind CSS** | 3.4+ | Utility-first CSS | Desarrollo rápido, mobile-first, tree-shaking automático |
+| **Inertia.js** | 2+ | SPA sin API tradicional | Elimina API REST separada, simplifica stack, mejor DX |
+| **Vite** | 7+ | Build tool & dev server | HMR instantáneo, builds optimizados, ESM nativo |
+| **Tailwind CSS** | 4+ | Utility-first CSS | Desarrollo rápido, mobile-first, tree-shaking automático |
 | **shadcn/ui** | - | Component library | Componentes accesibles (ARIA), customizables, copy-paste (no NPM bloat) |
 | **Tiptap** | 2+ | Editor WYSIWYG | Basado en ProseMirror, extensible, markdown-friendly |
 | **React Hook Form** | 7+ | Gestión de formularios | Performance (uncontrolled), validación, integración con yup/zod |
@@ -268,76 +263,15 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 
 ### 3.3 Gestión de Dependencias con `uv`
 
-**Archivo `pyproject.toml` (PEP 621):**
+**Archivo [`pyproject.toml`](pyproject.toml) (PEP 621):**
 
-```toml
-[project]
-name = "intranet-10code"
-version = "1.0.0"
-description = "Sistema integral de gestión empresarial para 10Code"
-requires-python = ">=3.11"
-dependencies = [
-    "django>=5.0,<5.1",
-    "psycopg[binary]>=3.1",
-    "django-inertia>=0.6",
-    "django-allauth>=0.57",
-    "celery[redis]>=5.3",
-    "redis>=5.0",
-    "gunicorn>=21.0",
-    "python-dotenv>=1.0",
-    "pillow>=10.0",
-    "requests>=2.31",
-    "httpx>=0.25",
-    "weasyprint>=60.0",
-    
-    # ML/AI (para fase 2)
-    "scikit-learn>=1.4",
-    "pandas>=2.1",
-    "numpy>=1.26",
-]
+El archivo `pyproject.toml` contiene la configuración completa del proyecto incluyendo:
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.4",
-    "pytest-django>=4.7",
-    "pytest-cov>=4.1",
-    "pytest-asyncio>=0.21",
-    "ruff>=0.1",
-    "mypy>=1.7",
-    "black>=23.11",
-    "ipython>=8.18",
-    "django-debug-toolbar>=4.2",
-    "django-extensions>=3.2",
-]
-
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-select = ["E", "F", "I", "N", "W"]
-ignore = ["E501"]
-
-[tool.black]
-line-length = 100
-target-version = ['py311']
-
-[tool.mypy]
-python_version = "3.11"
-strict = true
-warn_return_any = true
-warn_unused_configs = true
-
-[tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.testing"
-python_files = ["test_*.py", "*_test.py"]
-python_functions = ["test_*"]
-addopts = [
-    "--cov=apps",
-    "--cov-report=html",
-    "--cov-report=term-missing",
-    "--cov-fail-under=80",
-    "--strict-markers",
-]
-```
+- Metadatos del proyecto (nombre, versión, descripción, autores)
+- Dependencias de producción, desarrollo y ML
+- Configuración de herramientas de desarrollo (Ruff, Black, MyPy, pytest)
+- Sistema de construcción con Hatchling
+- Configuración de empaquetado y distribución
 
 **Comandos `uv` principales:**
 
@@ -415,7 +349,44 @@ C4Container
 
 ### 4.2 Flujos de Datos Críticos
 
-Ver sección completa en documento (limitaciones de longitud en esta respuesta).
+Los siguientes flujos de datos críticos conectan los módulos del sistema Intranet 10Code, asegurando la integridad y el flujo de información en tiempo real entre módulos y con sistemas externos. Cada flujo se describe de manera básica y simple, y será detallado en el FSD correspondiente según el marco de documentación técnica.
+
+#### Flujos de Datos Críticos Identificados
+
+1. **Autenticación → Todos los módulos**: Proporciona datos de usuarios, roles y permisos para acceso controlado.
+   *Detallado en FSD - Autenticación y Usuarios y referenciado en cada FSD de módulo.*
+
+2. **RR.HH. → Planificación**: Transfiere datos de capacidad, ausencias y disponibilidad de recursos humanos.
+   *Detallado en FSD - Módulo RR.HH. y Control Horario y FSD - Módulo Planificación de Recursos.*
+
+3. **RR.HH. → Producción**: Alimenta datos de tiempo trabajado y capacidad para imputación y seguimiento.
+   *Detallado en FSD - Módulo RR.HH. y Control Horario y FSD - Módulo Gestión de Proyectos.*
+
+4. **Comercial → Producción**: Convierte oportunidades aceptadas en proyectos activos con requisitos iniciales.
+   *Detallado en FSD - Módulo Comercial + CRM y FSD - Módulo Gestión de Proyectos.*
+
+5. **Estimación → Comercial**: Proporciona estimaciones de esfuerzo para generar ofertas y contratos.
+   *Detallado en FSD - Sistema de Estimación y FSD - Módulo Comercial + CRM.*
+
+6. **Planificación → Producción**: Asigna recursos humanos a proyectos con porcentajes de dedicación.
+   *Detallado en FSD - Módulo Planificación de Recursos y FSD - Módulo Gestión de Proyectos.*
+
+7. **Producción → Planificación**: Actualiza carga real de trabajo y progreso para recalcular disponibilidad.
+   *Detallado en FSD - Módulo Gestión de Proyectos y FSD - Módulo Planificación de Recursos.*
+
+8. **Producción → Dashboards**: Envía métricas de progreso, tiempo imputado y estado de proyectos.
+   *Detallado en FSD - Módulo Gestión de Proyectos y FSD - Módulo Dashboards.*
+
+9. **Todos los módulos → Dashboards**: Consolida KPIs financieros, comerciales, de RR.HH. y productivos.
+   *Detallado en FSD - Módulo Dashboards y referenciado en cada FSD de módulo fuente.*
+
+10. **Producción → Documentación**: Vincula documentos de proyecto, actas y entregas.
+    *Detallado en FSD - Módulo Gestión de Proyectos y FSD - Módulo Documentación.*
+
+11. **Integraciones Externas → Sistema**: Importa commits de GitHub, datos financieros de ODOO y documentos de Google Drive.
+    *Detallado en FSD correspondiente al módulo receptor (ej. Producción para GitHub, Dashboards para ODOO) y en especificaciones de integración.*
+
+Estos flujos críticos aseguran la trazabilidad completa desde la oportunidad comercial hasta la entrega del proyecto, con datos centralizados y en tiempo real. Cada FSD detallará los modelos de datos, validaciones, APIs y lógica de negocio específica para implementar estos flujos de manera robusta y escalable.
 
 ---
 
@@ -439,12 +410,11 @@ Ver sección completa en documento (limitaciones de longitud en esta respuesta).
 │   ├── documents/              # Documentación
 │   ├── estimation/             # Estimaciones
 │   ├── dashboards/             # Cuadros mando
-│   └── integrations/           # Integraciones externas
-│       ├── google/
-│       ├── github/
-│       ├── odoo/
-│       ├── discord/
-│       └── openrouter/
+│   ├── integrations_google/    # Integración Google Workspace
+│   ├── integrations_github/    # Integración GitHub
+│   ├── integrations_odoo/      # Integración ODOO ERP
+│   ├── integrations_discord/   # Integración Discord
+│   └── integrations_openrouter/# Integración OpenRouter (LLMs)
 ├── config/                     # Configuración Django
 ├── frontend/                   # React + Inertia
 ├── docs/                       # Documentación
@@ -453,7 +423,11 @@ Ver sección completa en documento (limitaciones de longitud en esta respuesta).
 └── docker-compose.yml
 ```
 
+**Nota sobre integraciones:** Las integraciones externas se implementan como apps Django separadas para mantener modularidad, facilitar pruebas independientes y permitir activación/desactivación por entorno. Esto sigue las mejores prácticas de Django para bounded contexts.
+
 ### 5.2 Patrón Service Layer (80% comunicación)
+
+**¿Por qué Fat Services?** Usamos servicios 'gordos' (fat services) que contienen toda la lógica de negocio, validaciones y orquestación. Esto desacopla la lógica de negocio de las vistas y modelos, facilitando testing, reutilización y evolución hacia async. Los servicios manejan transacciones atómicas, side effects y logging centralizado.
 
 **Template de Service:**
 
@@ -475,27 +449,43 @@ class ProjectService:
         budget: Optional[Decimal] = None,
         **kwargs
     ) -> Project:
-        """Crear proyecto con validaciones."""
+        """
+        Crear proyecto con validaciones completas.
+
+        Args:
+            name: Nombre del proyecto
+            client: Cliente asociado
+            methodology: scrum | kanban | waterfall | hybrid
+            created_by: Usuario creador
+            budget: Presupuesto opcional
+
+        Returns:
+            Proyecto creado
+
+        Raises:
+            ValidationError: Si datos inválidos
+            PermissionError: Si usuario sin permisos
+        """
         # 1. Validar permisos
         if not created_by.has_perm('projects.add_project'):
             raise PermissionDenied(...)
-        
+
         # 2. Validar negocio
         if Project.objects.filter(name=name, client=client).exists():
             raise ValidationError(...)
-        
+
         # 3. Crear entidad
         project = Project.objects.create(...)
-        
+
         # 4. Side effects
         ProjectMember.objects.create(...)
-        
+
         # 5. Tareas async
         create_project_drive_folder.delay(project.id)
-        
+
         # 6. Logging
         logger.info(...)
-        
+
         return project
 ```
 
@@ -503,21 +493,46 @@ class ProjectService:
 
 ```python
 # apps/projects/selectors.py
-class ProjectSelector:
-    @staticmethod
-    def get_dashboard_data(*, user_id: int) -> Dict:
-        """Queries optimizadas para dashboard."""
-        projects = Project.objects.filter(
-            members__user_id=user_id
-        ).select_related(
-            'created_by'
-        ).prefetch_related(
-            'members__user'
-        ).annotate(
-            task_count=Count('tasks')
+from typing import Optional, Dict
+from django.db.models import QuerySet, Q, Prefetch
+
+def get_projects_list(
+    *,
+    user: User,
+    filters: Optional[Dict] = None
+) -> QuerySet[Project]:
+    """
+    Obtener lista de proyectos optimizada.
+
+    Args:
+        user: Usuario para permisos
+        filters: Filtros opcionales
+
+    Returns:
+        QuerySet optimizado
+    """
+    # Base optimizado
+    qs = Project.objects.select_related(
+        'created_by'
+    ).prefetch_related(
+        Prefetch(
+            'members',
+            queryset=ProjectMember.objects.select_related('user')
         )
-        
-        return {...}
+    )
+
+    # Permisos
+    if not user.is_staff:
+        qs = qs.filter(
+            Q(created_by=user) | Q(members__user=user)
+        ).distinct()
+
+    # Filtros
+    if filters:
+        if 'status' in filters:
+            qs = qs.filter(status=filters['status'])
+
+    return qs.order_by('-created_at')
 ```
 
 ---
@@ -563,6 +578,8 @@ Cada app Django tiene sus propios modelos siguiendo DDD (Domain-Driven Design). 
 
 ### 6.3 Patrones de Modelado
 
+**¿Por qué Thin Models?** Los modelos deben ser delgados (thin models), conteniendo solo estructura de datos y métodos simples. Toda lógica de negocio reside en services, facilitando testing, reutilización y mantenibilidad. Los modelos incluyen propiedades calculadas básicas sin queries complejas.
+
 #### Modelo Base Abstracto
 
 ```python
@@ -597,6 +614,8 @@ class SoftDeletableModel(TimestampedModel):
 
 ```python
 class Project(models.Model):
+    """Modelo de Proyecto."""
+
     class Status(models.TextChoices):
         DRAFT = 'draft', 'Borrador'
         ACTIVE = 'active', 'Activo'
@@ -615,6 +634,8 @@ class Project(models.Model):
 
 ```python
 class ProjectConfig(models.Model):
+    """Configuración específica de proyecto."""
+
     project = models.OneToOneField(Project, on_delete=models.CASCADE)
 
     # Configuraciones específicas por metodología
@@ -841,52 +862,183 @@ def log_data_access(user, resource_type, resource_id, action):
 
 #### Validación de Inputs
 
+> **Recomendación: Usar Pydantic para validaciones robustas**
+
+Pydantic proporciona validación automática, conversión de tipos, y mejores mensajes de error. Es especialmente útil para inputs complejos y APIs.
+
 ```python
 # apps/projects/services.py
-from django.core.validators import validate_email
+from pydantic import BaseModel, Field, ValidationError as PydanticValidationError
 from django.core.exceptions import ValidationError
+from decimal import Decimal
+
+class CreateProjectInput(BaseModel):
+    """Modelo Pydantic para validación de entrada de proyecto."""
+    name: str = Field(..., min_length=1, max_length=200, description="Nombre del proyecto")
+    budget: Decimal = Field(..., ge=0, description="Presupuesto (debe ser >= 0)")
+    methodology: str = Field(..., pattern=r'^(scrum|kanban|waterfall|hybrid)$', description="Metodología de desarrollo")
+
+    class Config:
+        # Configuración Pydantic v2
+        str_strip_whitespace = True  # Sanitiza automáticamente strings
 
 class ProjectService:
     @staticmethod
-    def create_project(*, name: str, budget: Decimal, **kwargs):
-        # Validaciones estrictas
-        if len(name) > 200:
-            raise ValidationError("Nombre demasiado largo")
+    def create_project(*, name: str, budget: Decimal, methodology: str, **kwargs):
+        # Validación con Pydantic
+        try:
+            input_data = CreateProjectInput(
+                name=name,
+                budget=budget,
+                methodology=methodology
+            )
+        except PydanticValidationError as e:
+            # Convertir errores Pydantic a Django ValidationError
+            raise ValidationError(e.errors())
 
-        if budget < 0:
-            raise ValidationError("Presupuesto no puede ser negativo")
-
-        # Sanitización
-        name = name.strip()
+        # Ahora usar input_data.name, input_data.budget, etc. (ya validados y sanitizados)
 
         # ...
 ```
 
 ### 7.4 Gestión de Secrets
 
-#### Variables de Entorno
+#### Patrón de Gestión de Secrets (KISS)
+
+**Filosofía**: Priorizar archivos sobre variables de entorno para Docker + VPS. Los archivos no aparecen en `docker inspect` ni en procesos del sistema.
+
+**Implementación**: Módulo `config/secrets.py` con función `read_secret()` que busca en orden de prioridad:
+
+```python
+# config/secrets.py - Función principal
+def read_secret(
+    secret_name: str,
+    *,
+    required: bool = True,
+    default: str | None = None,
+) -> str:
+    """
+    Lee secreto desde archivos o variables de entorno.
+
+    Prioridad:
+    1. /run/secrets/{nombre} - Docker Secrets (producción)
+    2. secrets/{nombre}.txt - Archivos locales (desarrollo)
+    3. Variable de entorno {nombre} - Fallback
+    4. Default (si se proporciona)
+    """
+```
+
+**Uso en settings:**
 
 ```python
 # config/settings/base.py
-import os
-from dotenv import load_dotenv
+from config.secrets import read_secret, validate_secret_key
 
-load_dotenv()
+# SECRET_KEY con validación automática
+SECRET_KEY = read_secret("django_secret_key", required=True)
+if not validate_secret_key(SECRET_KEY, environment=ENVIRONMENT):
+    raise ValueError("SECRET_KEY no cumple requisitos de seguridad")
 
-# ✅ BIEN - Secrets desde entorno
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
-DATABASE_PASSWORD = os.environ['DB_PASSWORD']
-GOOGLE_CLIENT_SECRET = os.environ['GOOGLE_CLIENT_SECRET']
+# Database password con fallback
+DATABASES = {
+    'default': {
+        'PASSWORD': read_secret("db_password", required=False, default="postgres"),
+        # ... otros settings
+    }
+}
+```
 
-# ❌ MAL - Nunca hardcodear secrets
-SECRET_KEY = 'hardcoded-secret-key'  # NUNCA!
+#### Estructura de Archivos de Secrets
+
+```bash
+10code-intranet/
+├── config/secrets.py          # ✅ Módulo de gestión de secrets
+├── secrets/                   # ✅ Carpeta para secrets (permisos 700)
+│   ├── django_secret_key.txt  # ✅ SECRET_KEY (permisos 600)
+│   ├── db_password.txt        # ✅ Database password (permisos 600)
+│   └── README.md              # 📖 Documentación
+├── .env                       # ✅ Variables NO sensibles
+└── .gitignore                 # ✅ Incluye secrets/ y .env
+```
+
+#### Docker Secrets (Producción)
+
+**Configuración real en `compose.yml`:**
+
+```yaml
+# Servicios que usan secrets
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password  # ✅ Password desde archivo
+    secrets:
+      - db_password
+
+  web:
+    secrets:
+      - db_password
+      - django_secret_key
+
+  celery_worker:
+    secrets:
+      - db_password
+      - django_secret_key
+
+  celery_beat:
+    secrets:
+      - db_password
+      - django_secret_key
+
+# Definición de secrets
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  django_secret_key:
+    file: ./secrets/django_secret_key.txt
+```
+
+Los secrets se montan automáticamente en `/run/secrets/` dentro del contenedor. PostgreSQL usa `POSTGRES_PASSWORD_FILE` para leer la password desde el archivo de secrets.
+
+#### Validación de SECRET_KEY
+
+```python
+# config/secrets.py
+def validate_secret_key(secret_key: str, *, environment: str = "production") -> bool:
+    """Valida que SECRET_KEY cumpla requisitos de seguridad."""
+    min_length = 50 if environment == "production" else 30
+
+    if len(secret_key) < min_length:
+        logger.error(f"SECRET_KEY debe tener al menos {min_length} caracteres")
+        return False
+
+    # Detectar claves inseguras
+    insecure_patterns = ["django-insecure-", "change-me", "secret"]
+    for pattern in insecure_patterns:
+        if pattern in secret_key.lower():
+            logger.error(f"SECRET_KEY contiene patrón inseguro: '{pattern}'")
+            return False
+
+    return True
 ```
 
 #### Rotación de Secrets
 
-- **Secrets críticos rotados cada 90 días**
-- **Tokens de API con expiración**
-- **Passwords nunca almacenados en plain text**
+- **SECRET_KEY**: Rotar cada 90 días mínimo, después de brechas de seguridad
+- **Database passwords**: Cambiar en PostgreSQL + actualizar archivo
+- **API tokens**: Con expiración automática, renovar antes de vencer
+- **Backup de secrets**: Encriptados y versionados fuera del repositorio
+
+**Comando de rotación:**
+
+```bash
+# Generar nueva SECRET_KEY
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())" > secrets/django_secret_key.txt
+chmod 600 secrets/django_secret_key.txt
+
+# Reiniciar aplicación
+docker compose restart web
+```
 
 ---
 
@@ -906,7 +1058,7 @@ SECRET_KEY = 'hardcoded-secret-key'  # NUNCA!
 
 #### Optimización de Queries (CRÍTICO)
 
-**Patrón obligatorio: select_related / prefetch_related**
+##### **Patrón obligatorio: select_related / prefetch_related**
 
 ```python
 # ❌ MAL - N+1 queries
@@ -1245,12 +1397,27 @@ class ProjectMemberFactory(factory.django.DjangoModelFactory):
 
 **Objetivo mínimo**: 80% de cobertura en lógica crítica.
 
+#### Comandos Directos
+
 ```bash
 # Ejecutar tests con cobertura
 pytest --cov=apps --cov-report=html --cov-report=term-missing
 
 # Ver reporte HTML
 open htmlcov/index.html
+```
+
+#### Comandos Makefile (Docker)
+
+```bash
+# Ejecutar todos los tests
+make test
+
+# Ejecutar tests con cobertura
+make test-coverage
+
+# Ejecutar tests sin migraciones (más rápido)
+make test-fast
 ```
 
 **Áreas críticas con 100% cobertura obligatoria:**
@@ -1304,103 +1471,126 @@ open htmlcov/index.html
 
 **Estrategia de containers:**
 
+Ver implementación completa en [`Dockerfile`](../Dockerfile).
+
+**Implementación realizada:** El Dockerfile actual utiliza un enfoque multi-stage optimizado con uv para gestión de dependencias, incluyendo:
+
+- Stage builder con uv para instalación eficiente de dependencias
+- Stage runtime minimalista con usuario no-root por seguridad
+- Healthchecks integrados para monitoreo de contenedores
+- Variables de entorno optimizadas para producción
+- Cache mounts para acelerar builds
+
 ```dockerfile
-# Dockerfile (multi-stage)
+# Dockerfile (extracto simplificado - ver archivo completo)
 
-# Stage 1: Build frontend
-FROM node:20-alpine AS frontend-builder
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm ci
-COPY frontend/ ./
-RUN npm run build
+# Stage 1: Builder - Instalar dependencias con uv
+FROM python:3.14-slim-trixie AS builder
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Stage 2: Python dependencies
-FROM python:3.11-slim AS python-builder
-WORKDIR /app
-RUN pip install uv
-COPY pyproject.toml ./
-RUN uv pip install --system -e .
-
-# Stage 3: Final image
-FROM python:3.11-slim
-WORKDIR /app
-
-# Copiar dependencias Python
-COPY --from=python-builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
-
-# Copiar frontend compilado
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-
-# Copiar código aplicación
-COPY apps/ ./apps/
-COPY config/ ./config/
-COPY manage.py ./
-
-# Collectstatic
-RUN python manage.py collectstatic --noinput
-
+# Stage 2: Runtime - Imagen final minimalista
+FROM python:3.14-slim-trixie AS runtime
+COPY --from=builder /tmp/build/.venv /app/.venv
+RUN groupadd -r appuser && useradd -r -g appuser -u 1000 -m -s /sbin/nologin appuser
+USER appuser
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD python -c "import django; django.setup(); from django.db import connection; connection.ensure_connection()" || exit 1
 EXPOSE 8000
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
 ```
 
 ### 10.3 Docker Compose para Desarrollo
 
-```yaml
-# docker-compose.yml
-version: '3.8'
+Ver implementación completa en [`compose.yml`](../compose.yml).
 
+**Implementación realizada:** La configuración Docker Compose incluye servicios completos para desarrollo y producción con:
+
+- PostgreSQL 18 con healthchecks y secrets management
+- Redis 8.2 con persistencia de datos
+- Servicios separados para web, celery worker y celery beat
+- Gestión de secrets mediante archivos Docker
+- Redes y volúmenes optimizados para desarrollo
+- Variables de entorno configurables
+
+```yaml
+# compose.yml (extracto - ver archivo completo)
 services:
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     environment:
-      POSTGRES_DB: intranet_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${DATABASE_NAME:-10code_intranet}
+      POSTGRES_USER: ${DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-postgres}"]
+    networks:
+      - backend
 
   redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    image: redis:8.2-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    networks:
+      - backend
 
   web:
-    build: .
-    command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-      - redis
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/intranet_db
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-config.settings.development}
+      - DATABASE_HOST=db
       - REDIS_URL=redis://redis:6379/0
-
-  celery:
-    build: .
-    command: celery -A config worker -l info
-    volumes:
-      - .:/app
+    secrets:
+      - db_password
+      - django_secret_key
+    ports:
+      - "${WEB_PORT:-8000}:8000"
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  celery-beat:
-    build: .
-    command: celery -A config beat -l info
-    volumes:
-      - .:/app
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    command: celery -A config worker --loglevel=info --concurrency=2
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    secrets:
+      - db_password
+      - django_secret_key
     depends_on:
-      - db
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+  redis_data:
+
+networks:
+  backend:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  django_secret_key:
+    file: ./secrets/django_secret_key.txt
 ```
 
 ### 10.4 CI/CD con GitHub Actions
@@ -1421,7 +1611,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:18-alpine
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
@@ -1436,7 +1626,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.14'
 
       - name: Install uv
         run: pip install uv
@@ -1477,42 +1667,78 @@ jobs:
 
 ### 10.5 Configuración de Entornos
 
-#### Settings por Entorno
+#### Estructura de Settings
+
+La configuración se organiza en módulos separados por entorno siguiendo las mejores prácticas de Django:
 
 ```python
-# config/settings/
-├── __init__.py
-├── base.py          # Configuración común
-├── development.py   # Local development
-├── testing.py       # Tests
-├── staging.py       # Staging
-└── production.py    # Producción
+config/settings/
+├── __init__.py          # Importa configuración base
+├── base.py              # Configuración común a todos los entornos
+├── development.py       # Configuración para desarrollo local
+└── production.py        # Configuración para producción
+```
 
-# config/settings/production.py
-from .base import *
+#### Configuración Base (`base.py`)
 
-DEBUG = False
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+Contiene la configuración común: apps instaladas, base de datos, middleware, validadores de password, internacionalización, archivos estáticos, y configuración de secrets mediante el módulo `config.secrets`.
 
-# Seguridad
-SECURE_SSL_REDIRECT = True
+#### Configuración de Producción (`production.py`)
+
+**Extracto clave:**
+
+```python
+# Seguridad reforzada
+SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT", default="True") == "True"
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
 
-# Base de datos
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ['DB_NAME'],
-        'USER': os.environ['DB_USER'],
-        'PASSWORD': os.environ['DB_PASSWORD'],
-        'HOST': os.environ['DB_HOST'],
-        'PORT': os.environ.get('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 600,
+# Logging estructurado a stdout (Docker-friendly)
+LOGGING = {
+    "version": 1,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": env("LOG_LEVEL", default="INFO"),
+    },
+}
+
+# Caché Redis y Celery para tareas asíncronas
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6379/0"),
     }
 }
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
 ```
+
+**Características principales:**
+
+- **Seguridad por defecto**: SSL obligatorio, cookies seguras, protección XSS/CSRF
+- **Logging estructurado**: Salida a stdout para contenedores Docker
+- **Caché distribuido**: Redis para sesiones, queries y datos temporales
+- **Tareas asíncronas**: Celery con Redis como broker para ETL y notificaciones
+- **Variables de entorno**: Configuración flexible vía `environ.Env`
+
+#### Configuración de Desarrollo (`development.py`)
+
+Incluye herramientas de desarrollo: Django Debug Toolbar, django-extensions, CORS permisivo, y hosts abiertos para facilitar el desarrollo local.
+
+**Por qué esta estructura:**
+
+- **Separación clara**: Configuración específica por entorno sin duplicación
+- **Seguridad**: Producción con configuraciones reforzadas, desarrollo con herramientas útiles
+- **Flexibilidad**: Variables de entorno permiten configuración sin cambios de código
+- **Mantenibilidad**: Configuración modular y bien documentada
 
 ### 10.6 Backups y Disaster Recovery
 
@@ -1543,122 +1769,103 @@ find $BACKUP_DIR -name "backup_*.dump" -mtime +30 -delete
 
 ## 11. Monitoreo y Observabilidad
 
-### 11.1 Logging Estructurado
+### 11.1 Logging Básico (MVP)
 
 #### Configuración de Logging
 
-```python
-# config/settings/base.py
-import structlog
+**En producción** (Docker-friendly):
 
+```python
+# config/settings/production.py
+
+# Logging a stdout (Docker-friendly)
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'json': {
-            '()': structlog.stdlib.ProcessorFormatter,
-            'processor': structlog.processors.JSONRenderer(),
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'json',
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'logs/app.log',
-            'maxBytes': 10485760,  # 10MB
-            'backupCount': 10,
-            'formatter': 'json',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-        },
-        'apps': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
-        },
-        'audit': {
-            'handlers': ['file'],
-            'level': 'INFO',
-        },
+    "root": {
+        "handlers": ["console"],
+        "level": env("LOG_LEVEL", default="INFO"),
     },
 }
-
-# Configurar structlog
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
-)
 ```
 
-#### Uso de Logging Estructurado
+**En desarrollo** (hereda configuración base):
 
 ```python
-import structlog
+# config/settings/development.py
+# Sin configuración específica de logging - usa configuración por defecto
+```
 
-logger = structlog.get_logger(__name__)
+#### Uso de Logging Básico
+
+```python
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ProjectService:
     @staticmethod
-    def create_project(...):
+    def create_project(name: str, client: str, created_by, **kwargs):
         logger.info(
-            'project.create.started',
-            user_id=created_by.id,
-            project_name=name,
-            client=client
+            f"Creating project '{name}' for client '{client}' by user {created_by.id}"
         )
 
-        # ... lógica ...
+        # ... lógica de negocio ...
 
         logger.info(
-            'project.create.completed',
-            project_id=project.id,
-            duration_ms=duration
+            f"Project created successfully with ID {project.id}"
         )
+
+        return project
 ```
+
+#### Estrategia de Logging para MVP
+
+**¿Por qué logging básico en MVP?**
+
+- **Simplicidad**: Enfocarnos en funcionalidad core antes que en observabilidad avanzada
+- **Suficiente para debugging**: Logging estándar cubre necesidades de desarrollo y producción básica
+- **Docker-friendly**: Salida a stdout/stderr funciona perfectamente en contenedores
+- **Evolución futura**: Preparado para migrar a structured logging cuando sea necesario
+
+**Plan para fases futuras:**
+
+- **Fase 2**: Implementar structured logging con `structlog` para mejor parseabilidad
+- **Fase 3**: Centralización de logs con ELK stack o Loki
+- **Fase 4**: Métricas y monitoring avanzado con Prometheus/Grafana
 
 ### 11.2 Métricas y Monitoring
 
 #### Métricas Clave a Monitorear
 
-**Application metrics:**
+##### **Enfoque MVP: Métricas de Negocio Exclusivamente**
 
-- Request latency (p50, p95, p99)
-- Request throughput (req/s)
-- Error rate (% requests con 5xx)
-- Active users concurrentes
-- Background job queue size
+En la fase MVP, las métricas que se van a medir y monitorear serán exclusivamente las de negocio, ya que estas son las que aportan valor directo al negocio y permiten validar el éxito del producto.
 
-**Infrastructure metrics:**
+Las métricas de aplicación (performance, errores) e infraestructura (CPU, memoria) se implementarán en fases posteriores cuando sea necesario para optimización y escalabilidad.
 
-- CPU usage
-- Memory usage
-- Disk I/O
-- Network I/O
-- Database connections pool
+**Business metrics (MVP):**
 
-**Business metrics:**
+Las métricas de negocio específicas dependerán de cada módulo y serán definidas en el FSD correspondiente:
 
-- Proyectos activos
-- Horas registradas diarias
-- Usuarios activos diarios/semanales
-- Oportunidades comerciales por estado
+- **Módulo RR.HH.**: Horas registradas diarias, usuarios activos diarios/semanales
+- **Módulo Gestión de Proyectos**: Proyectos activos, progreso de proyectos
+- **Módulo Comercial**: Oportunidades comerciales por estado, conversiones
+- **Módulo Dashboards**: KPIs consolidados de todos los módulos
+
+Cada FSD detallará las métricas específicas de negocio que se van a monitorear para ese módulo.
 
 ### 11.3 Alertas
 
@@ -1704,53 +1911,9 @@ alerts:
 
 ---
 
-## 12. Decisiones Técnicas y ADRs
+## 12. Referencias y Recursos
 
-Este proyecto documenta decisiones arquitectónicas significativas mediante **Architecture Decision Records (ADRs)**. Los ADRs son documentos inmutables que registran el contexto, opciones consideradas y justificación de decisiones técnicas importantes.
-
-### 12.1 ADRs Pendientes de Creación
-
-Los siguientes ADRs están referenciados en este SAD y deben ser creados:
-
-| ID | Decisión | Prioridad | Estado |
-|----|----------|-----------|--------|
-| **ADR-001** | Monolito Modular vs Microservicios | Alta | Pendiente |
-| **ADR-002** | Django + Inertia.js vs API REST + SPA separado | Alta | Pendiente |
-| **ADR-003** | PostgreSQL vs MySQL vs MongoDB | Media | Pendiente |
-| **ADR-004** | uv vs pip vs poetry como gestor de dependencias | Baja | Pendiente |
-| **ADR-005** | Tiptap + WeasyPrint para documentación | Media | Pendiente |
-| **ADR-006** | Celery + Redis vs RQ vs dramatiq | Media | Pendiente |
-| **ADR-007** | OpenRouter vs OpenAI directo vs Anthropic directo | Media | Pendiente |
-| **ADR-008** | Service Layer Pattern como patrón obligatorio | Alta | Pendiente |
-
-### 12.2 Ubicación de ADRs
-
-```txt
-docs/
-└── product_docs/
-    └── adr/
-        ├── 001-monolith-vs-microservices.md
-        ├── 002-django-inertia-choice.md
-        ├── 003-postgresql-choice.md
-        ├── 004-uv-package-manager.md
-        ├── 005-tiptap-weasyprint-docs.md
-        ├── 006-celery-redis-choice.md
-        ├── 007-openrouter-llm-gateway.md
-        ├── 008-service-layer-pattern.md
-        └── template-adr.md
-```
-
-### 12.3 Próximos Pasos
-
-Los ADRs se crearán en la siguiente fase de consolidación de documentación, siguiendo la plantilla definida en `docs/product_docs/.framework/templates/ADR_template.md`.
-
-**Referencia**: Ver `/docs/product_docs/.framework/marco-documentacion-tecnica-10code.md` sección 5 para guía completa de ADRs.
-
----
-
-## 13. Referencias y Recursos
-
-### 13.1 Documentación del Proyecto
+### 12.1 Documentación del Proyecto
 
 **Documentos maestros:**
 
@@ -1771,66 +1934,66 @@ Los ADRs se crearán en la siguiente fase de consolidación de documentación, s
 - `docs/product_docs/modules/hr/FSD-TimeTracking.md`
 - `docs/product_docs/modules/commercial/FSD-Commercial.md`
 - `docs/product_docs/modules/projects/FSD-Projects.md`
-- _(otros módulos según priorización)_
+- *(otros módulos según priorización)*
 
-### 13.2 Documentación Técnica Externa
+### 12.2 Documentación Técnica Externa
 
 **Django:**
 
-- Django 5 Documentation: https://docs.djangoproject.com/en/5.0/
-- Django ORM Performance: https://docs.djangoproject.com/en/5.0/topics/db/optimization/
-- Django Security: https://docs.djangoproject.com/en/5.0/topics/security/
+- Django 5 Documentation: <https://docs.djangoproject.com/en/5.0/>
+- Django ORM Performance: <https://docs.djangoproject.com/en/5.0/topics/db/optimization/>
+- Django Security: <https://docs.djangoproject.com/en/5.0/topics/security/>
 
 **Inertia.js:**
 
-- Inertia.js Documentation: https://inertiajs.com/
-- React Adapter: https://inertiajs.com/client-side-setup#react
+- Inertia.js Documentation: <https://inertiajs.com/>
+- React Adapter: <https://inertiajs.com/client-side-setup#react>
 
 **React y Frontend:**
 
-- React 18 Documentation: https://react.dev/
-- TypeScript Handbook: https://www.typescriptlang.org/docs/
-- shadcn/ui Components: https://ui.shadcn.com/
-- Tailwind CSS: https://tailwindcss.com/docs
+- React 18 Documentation: <https://react.dev/>
+- TypeScript Handbook: <https://www.typescriptlang.org/docs/>
+- shadcn/ui Components: <https://ui.shadcn.com/>
+- Tailwind CSS: <https://tailwindcss.com/docs>
 
 **Base de Datos:**
 
-- PostgreSQL 15 Documentation: https://www.postgresql.org/docs/15/
-- Django + PostgreSQL Best Practices: https://www.postgresql.org/docs/15/django.html
+- PostgreSQL 15 Documentation: <https://www.postgresql.org/docs/15/>
+- Django + PostgreSQL Best Practices: <https://www.postgresql.org/docs/15/django.html>
 
 **Testing:**
 
-- pytest Documentation: https://docs.pytest.org/
-- pytest-django: https://pytest-django.readthedocs.io/
-- Playwright: https://playwright.dev/
+- pytest Documentation: <https://docs.pytest.org/>
+- pytest-django: <https://pytest-django.readthedocs.io/>
+- Playwright: <https://playwright.dev/>
 
 **Deployment:**
 
-- Docker Documentation: https://docs.docker.com/
-- Gunicorn: https://docs.gunicorn.org/
-- Nginx: https://nginx.org/en/docs/
+- Docker Documentation: <https://docs.docker.com/>
+- Gunicorn: <https://docs.gunicorn.org/>
+- Nginx: <https://nginx.org/en/docs/>
 
-### 13.3 Libros y Recursos de Referencia
+### 12.3 Libros y Recursos de Referencia
 
 - **Two Scoops of Django**: Best practices de Django
 - **Domain-Driven Design (Eric Evans)**: Fundamentos de DDD
 - **Clean Architecture (Robert C. Martin)**: Principios arquitectónicos
 - **The Pragmatic Programmer**: Best practices generales
 
-### 13.4 Herramientas de Desarrollo
+### 12.4 Herramientas de Desarrollo
 
 **Backend:**
 
-- Python 3.11+
-- Django 5.0+
-- django-inertia
-- Celery 5.3+
+- Python 3.14+
+- Django 5.2.8+
+- inertia-django
+- Celery 5.5.3+
 - pytest
 
 **Frontend:**
 
 - Node.js 20+
-- React 18+
+- React 19+
 - TypeScript 5+
 - Vite 6+
 - Playwright
@@ -1838,28 +2001,30 @@ Los ADRs se crearán en la siguiente fase de consolidación de documentación, s
 **Infraestructura:**
 
 - Docker & Docker Compose
-- PostgreSQL 15
+- PostgreSQL 18
 - Redis 7
 - Nginx
 
 ---
 
-## 14. Historial de Cambios
+## 13. Historial de Cambios
 
 | Versión | Fecha | Autor | Cambios |
 |---------|-------|-------|---------|
 | **1.0** | 2024-11-14 | Juanje Márquez | Creación inicial del SAD (secciones 1-5) |
-| **1.1** | 2024-11-17 | Claude (Agent) | Completado secciones 6-15: Base de Datos, Seguridad, Performance, Testing, Deployment, Monitoreo, ADRs, Referencias |
+| **1.1** | 2024-11-17 | Juanje Márquez | Completado secciones 6-15: Base de Datos, Seguridad, Performance, Testing, Deployment, Monitoreo, ADRs, Referencias |
+| **1.2** | 2024-11-17 | Juanje Márquez | Actualización estructura integraciones: apps separadas en lugar de subcarpetas |
+| **1.3** | 2025-11-17 | Juanje Márquez | Incorporación de Pydantic para validaciones de input en backend |
+| **1.4** | 2025-11-17 | Juanje Márquez | Referencias a archivos Docker implementados y explicación básica de la implementación |
+| **1.5** | 2025-11-17 | Juanje Márquez | Actualización sección de logging para coherencia con implementación MVP (logging básico vs structlog) |
 
 ### Próximas Actualizaciones Previstas
 
-- **v1.2**: Creación de ADRs 001-008 referenciados
-- **v1.3**: Actualización tras implementación del módulo de autenticación (primer FSD)
 - **v2.0**: Revisión completa tras finalización del MVP
 
 ---
 
-## 15. Aprobaciones
+## 14. Aprobaciones
 
 ### Estado de Aprobación
 
@@ -1911,11 +2076,11 @@ Este Software Architecture Document define la arquitectura técnica completa de 
 ### Contacto
 
 **Arquitecto Principal**: Juanje Márquez (10Code)
-**Última actualización**: 2024-11-17
-**Versión del documento**: 1.1
+**Última actualización**: 2025-11-17
+**Versión del documento**: 1.5
 
 ---
 
-> **Fin del Software Architecture Document - Intranet 10Code v1.1**
+> **Fin del Software Architecture Document - Intranet 10Code v1.5**
 >
 > *Este SAD define el CÓMO técnico del sistema. Junto con el PRD (QUÉ y POR QUÉ), forma la base de documentación del proyecto.*
