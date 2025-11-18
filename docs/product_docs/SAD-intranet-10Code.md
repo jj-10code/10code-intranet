@@ -414,7 +414,7 @@ Estos flujos críticos aseguran la trazabilidad completa desde la oportunidad co
 │   ├── integrations_github/    # Integración GitHub
 │   ├── integrations_odoo/      # Integración ODOO ERP
 │   ├── integrations_discord/   # Integración Discord
-│   └── integrations_openrouter/# Integración OpenRouter (LLMs)
+│   └── integrations_openrouter/ # Integración OpenRouter (LLMs)
 ├── config/                     # Configuración Django
 ├── frontend/                   # React + Inertia
 ├── docs/                       # Documentación
@@ -423,7 +423,7 @@ Estos flujos críticos aseguran la trazabilidad completa desde la oportunidad co
 └── docker-compose.yml
 ```
 
-**Nota sobre integraciones:** Las integraciones externas se implementan como apps Django separadas para mantener modularidad, facilitar pruebas independientes y permitir activación/desactivación por entorno. Esto sigue las mejores prácticas de Django para bounded contexts.
+> **Nota sobre integraciones:** Las integraciones externas se implementan como apps Django separadas para mantener modularidad, facilitar pruebas independientes y permitir activación/desactivación por entorno. Esto sigue las mejores prácticas de Django para bounded contexts.
 
 ### 5.2 Patrón Service Layer (80% comunicación)
 
