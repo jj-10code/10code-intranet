@@ -3,7 +3,7 @@
 ## Metadata
 
 - **Módulo Django**: `apps/accounts`
-- **Versión**: 1.0
+- **Versión**: 1.2
 - **Fecha de creación**: 2024-11-18
 - **Última actualización**: 2024-11-18
 - **Owner**: Juanje Márquez - 10Code
@@ -231,9 +231,6 @@ erDiagram
 **Métodos clave**:
 
 - `get_full_name()` → Nombre completo
-- `has_role(role_code)` → Verificar si tiene rol específico
-- `has_perm(permission)` → Override para RBAC custom
-- `get_all_permissions()` → Unión de permisos de todos sus roles
 
 **Manager custom**: `UserManager` para crear usuarios con email como username
 
@@ -260,8 +257,7 @@ erDiagram
 
 **Métodos clave**:
 
-- `get_all_permissions()` → Incluye permisos heredados del parent
-- `get_inherited_roles()` → Cadena completa de herencia
+- Ninguno (modelo delgado - lógica de negocio en services/selectors)
 
 #### Modelo `UserRole` (Tabla de unión)
 
@@ -357,11 +353,6 @@ erDiagram
    - Configura herencia de parent_role
    - Asigna permisos especificados
 
-4. **`get_user_effective_permissions(user: User) -> set`**
-   - Calcula unión de permisos de todos sus roles
-   - Incluye permisos heredados
-   - Cachea resultado (5 minutos)
-
 #### `AuthService`
 
 **Funciones principales**:
@@ -405,7 +396,18 @@ erDiagram
    - Para cumplimiento normativo
    - Aplica filtros especificados
 
-### 4.3 Vistas/Endpoints (Inertia)
+### 4.3 Selectors
+
+**Responsabilidades**: READ operations únicamente, optimización con select_related/prefetch_related, filtros y búsquedas, sin side effects.
+
+**Funciones principales**:
+
+1. **`get_user_effective_permissions(*, user: User) -> set`**
+   - Calcula unión de permisos de todos sus roles
+   - Incluye permisos heredados
+   - Cachea resultado (5 minutos)
+
+### 4.4 Vistas/Endpoints (Inertia)
 
 #### Rutas de Autenticación
 
@@ -455,41 +457,220 @@ erDiagram
 | `/audit` | GET | `audit_index` | Lista de logs de auditoría |
 | `/audit/export` | GET | `audit_export` | Exportar logs |
 
-### 4.4 Frontend (Inertia Pages - React + TypeScript)
+### 4.5 Frontend (Inertia Pages - React + TypeScript)
 
-#### Estructura de Páginas
+#### Arquitectura Frontend
 
-```markdown
-frontend/Pages/
-├── Auth/
-│   ├── Login.tsx          # Página de login (botón Google OAuth)
-│   ├── Callback.tsx       # Procesando callback (loader)
-│   └── Unauthorized.tsx   # Acceso denegado
-├── Users/
-│   ├── Index.tsx          # Lista de usuarios con tabla y filtros
-│   ├── Create.tsx         # Formulario de creación manual
-│   ├── Show.tsx           # Detalle de usuario (perfil, roles, actividad)
-│   ├── Edit.tsx           # Formulario de edición
-│   └── Partials/
-│       ├── UserCard.tsx   # Card de usuario
-│       ├── RolesBadges.tsx# Badges de roles
-│       └── AuditTimeline.tsx # Timeline de auditoría
-├── Roles/
-│   ├── Index.tsx          # Lista de roles
-│   ├── Create.tsx         # Crear rol personalizado
-│   ├── Show.tsx           # Detalle de rol con permisos
-│   └── Partials/
-│       └── PermissionsTree.tsx # Árbol de permisos por módulo
-└── Profile/
-    ├── Show.tsx           # Mi perfil
-    ├── Edit.tsx           # Editar mi perfil
-    └── Export.tsx         # Exportar mis datos
+El frontend sigue la filosofía **Inertia.js**: el servidor es la fuente de verdad. Todas las decisiones de autorización, validación y preparación de datos ocurren en el backend Django. El frontend React recibe datos preparados y listos para renderizar.
+
+**Stack tecnológico:**
+- React 19 + TypeScript
+- Inertia.js 2.0 (adaptador React)
+- Vite 7 (build tool & dev server)
+- Tailwind CSS 4 + shadcn/ui (componentes)
+- Zustand (gestión estado UI)
+
+#### Estructura de Directorios
+
+```txt
+frontend/
+├── src/
+│   ├── main.tsx              # Entry point
+│   ├── components/
+│   │   ├── ui/              # shadcn/ui primitivos (NO modificar)
+│   │   │   ├── button.tsx
+│   │   │   ├── card.tsx
+│   │   │   ├── input.tsx
+│   │   │   ├── form.tsx
+│   │   │   └── badge.tsx
+│   │   ├── shared/          # Componentes aplicación
+│   │   │   ├── UserCard.tsx
+│   │   │   ├── RoleSelector.tsx
+│   │   │   ├── AuditLogViewer.tsx
+│   │   │   └── UserAvatar.tsx
+│   │   └── layout/          # Layouts
+│   │       ├── Layout.tsx
+│   │       └── AuthLayout.tsx
+│   ├── pages/               # Páginas Inertia
+│   │   ├── Auth/
+│   │   │   ├── Login.tsx          # Página de login (botón Google OAuth)
+│   │   │   ├── Callback.tsx       # Procesando callback (loader)
+│   │   │   └── Unauthorized.tsx   # Acceso denegado
+│   │   ├── Users/
+│   │   │   ├── Index.tsx          # Lista de usuarios con tabla y filtros
+│   │   │   ├── Create.tsx         # Formulario de creación manual
+│   │   │   ├── Show.tsx           # Detalle de usuario (perfil, roles, actividad)
+│   │   │   ├── Edit.tsx           # Formulario de edición
+│   │   │   └── Partials/
+│   │   │       ├── UserCard.tsx   # Card de usuario
+│   │   │       ├── RolesBadges.tsx# Badges de roles
+│   │   │       └── AuditTimeline.tsx # Timeline de auditoría
+│   │   ├── Roles/
+│   │   │   ├── Index.tsx          # Lista de roles
+│   │   │   ├── Create.tsx         # Crear rol personalizado
+│   │   │   ├── Show.tsx           # Detalle de rol con permisos
+│   │   │   └── Partials/
+│   │   │       └── PermissionsTree.tsx # Árbol de permisos por módulo
+│   │   └── Profile/
+│   │       ├── Show.tsx           # Mi perfil
+│   │       ├── Edit.tsx           # Editar mi perfil
+│   │       └── Export.tsx         # Exportar mis datos
+│   ├── hooks/               # Custom hooks
+│   │   ├── usePermissions.ts
+│   │   ├── useAuth.ts
+│   │   └── useDebounce.ts
+│   ├── lib/                 # Utilidades
+│   │   └── utils.ts
+│   ├── types/               # TypeScript types
+│   │   ├── models.ts
+│   │   └── index.ts
+│   └── stores/              # Zustand stores (solo UI state)
+│       └── uiStore.ts
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+#### Template de Página Inertia
+
+Cada página Inertia debe seguir esta estructura:
+
+```typescript
+// frontend/src/pages/Users/Index.tsx
+
+import { Head, Link } from '@inertiajs/react'
+import Layout from '@/components/layout/Layout'
+import { User } from '@/types/models'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+
+interface Props {
+  users: User[]
+  filters: Record<string, string>
+  permissions: {
+    can_create: boolean
+    can_edit: boolean
+    can_delete: boolean
+  }
+}
+
+export default function UsersIndex({ users, filters, permissions }: Props) {
+  return (
+    <Layout>
+      <Head title="Usuarios" />
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Usuarios</h1>
+
+          {permissions.can_create && (
+            <Link href="/users/create">
+              <Button>Nuevo Usuario</Button>
+            </Link>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {users.map((user) => (
+            <Card key={user.id}>
+              <Link href={`/users/${user.id}`}>
+                <h3>{user.first_name} {user.last_name}</h3>
+                <p>{user.email}</p>
+              </Link>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </Layout>
+  )
+}
+```
+
+**Reglas de páginas:**
+- ✅ **Type safety total**: Definir interface Props con todos los datos esperados del backend
+- ✅ **Layout wrapper**: Todas las páginas deben envolverse en un Layout para consistencia
+- ✅ **Head component**: Usar el componente Head de Inertia para title y meta tags
+- ✅ **Permisos en props**: Recibir permisos como props booleanos para mostrar/ocultar UI
+
+#### Formularios con useForm
+
+El hook useForm de Inertia simplifica el manejo de formularios:
+
+```typescript
+// frontend/src/pages/Users/Create.tsx
+
+import { useForm } from '@inertiajs/react'
+import { FormEvent } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+
+export default function UserCreate() {
+  const { data, setData, post, processing, errors } = useForm({
+    email: '',
+    first_name: '',
+    last_name: '',
+    role: 'employee'
+  })
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    post('/users')
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          value={data.email}
+          onChange={e => setData('email', e.target.value)}
+          disabled={processing}
+        />
+        {errors.email && (
+          <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+        )}
+      </div>
+
+      <div>
+        <Label htmlFor="first_name">Nombre</Label>
+        <Input
+          id="first_name"
+          value={data.first_name}
+          onChange={e => setData('first_name', e.target.value)}
+          disabled={processing}
+        />
+        {errors.first_name && (
+          <p className="text-sm text-red-600 mt-1">{errors.first_name}</p>
+        )}
+      </div>
+
+      <Button type="submit" disabled={processing}>
+        {processing ? 'Creando...' : 'Crear Usuario'}
+      </Button>
+    </form>
+  )
+}
+```
+
+#### Integración shadcn/ui
+
+**Filosofía de dos niveles:**
+- **Nivel 1 - Primitivos (ui/)**: Componentes base de shadcn/ui sin modificar
+- **Nivel 2 - Aplicación (shared/)**: Componentes específicos del dominio
+
+**Instalación de componentes:**
+```bash
+cd frontend
+npx shadcn-ui@latest add button card input form badge
 ```
 
 #### Componentes Compartidos Clave
 
-1. **`PermissionGuard.tsx`**
-   - HOC que envuelve componentes protegidos
+1. **`PermissionGuard.tsx`** (HOC)
+   - Envuelve componentes protegidos
    - Verifica permisos antes de renderizar
    - Muestra mensaje de acceso denegado si no tiene permiso
 
@@ -506,6 +687,217 @@ frontend/Pages/
 4. **`UserAvatar.tsx`**
    - Avatar de usuario con fallback a iniciales
    - Tooltip con nombre completo y rol principal
+
+#### Custom Hooks
+
+**Hook de Permisos:**
+```typescript
+// frontend/src/hooks/usePermissions.ts
+
+import { usePage } from '@inertiajs/react'
+
+interface PageProps {
+  permissions?: Record<string, boolean>
+}
+
+export function usePermissions() {
+  const { props } = usePage<PageProps>()
+
+  const can = (permission: string): boolean => {
+    return props.permissions?.[permission] ?? false
+  }
+
+  return { can }
+}
+
+// Uso en componente
+import { usePermissions } from '@/hooks/usePermissions'
+
+export default function UsersIndex() {
+  const { can } = usePermissions()
+
+  return (
+    <div>
+      {can('accounts.add_user') && (
+        <Button>Nuevo Usuario</Button>
+      )}
+    </div>
+  )
+}
+```
+
+**Hook de Usuario Actual:**
+```typescript
+// frontend/src/hooks/useAuth.ts
+
+import { usePage } from '@inertiajs/react'
+import { User } from '@/types/models'
+
+interface AuthProps {
+  auth: {
+    user: User
+  }
+}
+
+export function useAuth() {
+  const { props } = usePage<AuthProps>()
+
+  return {
+    user: props.auth.user,
+    isAuthenticated: !!props.auth.user
+  }
+}
+```
+
+#### Gestión de Estado con Zustand
+
+**Regla de oro:** Inertia es el state manager para datos del servidor. Zustand solo para estado UI efímero.
+
+```typescript
+// frontend/src/stores/uiStore.ts
+
+import { create } from 'zustand'
+
+interface UIStore {
+  sidebarOpen: boolean
+  toggleSidebar: () => void
+
+  theme: 'light' | 'dark'
+  setTheme: (theme: 'light' | 'dark') => void
+
+  modalOpen: boolean
+  openModal: () => void
+  closeModal: () => void
+}
+
+export const useUIStore = create<UIStore>((set) => ({
+  sidebarOpen: true,
+  toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+
+  theme: 'light',
+  setTheme: (theme) => set({ theme }),
+
+  modalOpen: false,
+  openModal: () => set({ modalOpen: true }),
+  closeModal: () => set({ modalOpen: false })
+}))
+```
+
+#### Navegación con Inertia
+
+Siempre usar el componente Link de Inertia para navegación interna:
+
+```typescript
+import { Link, router } from '@inertiajs/react'
+
+// ✅ BIEN
+<Link href="/users" className="nav-link">
+  Usuarios
+</Link>
+
+// ❌ MAL - No usar <a> para rutas internas
+<a href="/users">Usuarios</a>
+
+// Navegación programática
+const goToUser = (id: number) => {
+  router.visit(`/users/${id}`)
+}
+
+// Con datos (POST)
+const createUser = (data: UserData) => {
+  router.post('/users', data)
+}
+
+// Con confirmación
+const deleteUser = (id: number) => {
+  if (confirm('¿Eliminar usuario?')) {
+    router.delete(`/users/${id}`)
+  }
+}
+```
+
+#### Diseño Responsive (Mobile-First)
+
+Todos los componentes deben diseñarse mobile-first:
+
+```typescript
+export default function UsersGrid({ users }: Props) {
+  return (
+    <div className="
+      grid
+      grid-cols-1           /* Mobile: 1 columna */
+      md:grid-cols-2        /* Tablet: 2 columnas */
+      lg:grid-cols-3        /* Desktop: 3 columnas */
+      xl:grid-cols-4        /* Large: 4 columnas */
+      gap-4
+    ">
+      {users.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  )
+}
+```
+
+#### Optimizaciones de Performance
+
+**Lazy Loading de componentes:**
+```typescript
+import { lazy, Suspense } from 'react'
+
+const HeavyAuditViewer = lazy(() => import('@/components/shared/AuditLogViewer'))
+
+export default function UserShow() {
+  return (
+    <Suspense fallback={<div>Cargando auditoría...</div>}>
+      <HeavyAuditViewer userId={userId} />
+    </Suspense>
+  )
+}
+```
+
+**Memoización:**
+```typescript
+import { useMemo } from 'react'
+
+export default function UsersList({ users, filters }: Props) {
+  const filteredUsers = useMemo(() => {
+    return users.filter(u =>
+      u.email.includes(filters.search) &&
+      u.is_active === filters.activeOnly
+    )
+  }, [users, filters])
+
+  return (
+    <div>
+      {filteredUsers.map(user => (
+        <UserCard key={user.id} user={user} />
+      ))}
+    </div>
+  )
+}
+```
+
+#### Seguridad
+
+**Protección XSS:** React escapa automáticamente todo el contenido renderizado. Solo usar dangerouslySetInnerHTML con datos sanitizados del servidor.
+
+**Protección CSRF:** Inertia maneja CSRF automáticamente. No requiere configuración adicional.
+
+#### Checklist por Página
+
+Al crear una nueva página Inertia:
+
+- [ ] Definir interface Props completa con TypeScript
+- [ ] Usar componente Head para title
+- [ ] Envolver en Layout apropiado
+- [ ] Recibir permisos como props para UI condicional
+- [ ] Usar componentes de shadcn/ui apropiados
+- [ ] Implementar responsive design mobile-first
+- [ ] Manejar estados loading y error
+- [ ] Usar Links de Inertia para navegación
+- [ ] Validar formularios con useForm
+- [ ] Testing con React Testing Library
 
 ---
 
@@ -1303,6 +1695,8 @@ Métricas clave a trackear:
 | Versión | Fecha | Autor | Cambios |
 |---------|-------|-------|---------|
 | 1.0 | 2024-11-18 | Juanje Márquez | Creación inicial del FSD de Autenticación y Usuarios |
+| 1.1 | 2024-11-18 | Juanje Márquez | Alineación con patrones DJANGO_PATTERNS: separación Service Layer/Selectors, modelos delgados |
+| 1.2 | 2024-11-18 | Juanje Márquez | Alineación con patrones INERTIA_FRONTEND: arquitectura completa frontend, shadcn/ui, hooks, Zustand |
 
 ---
 
@@ -1326,6 +1720,6 @@ Este FSD se considera aprobado cuando:
 
 ---
 
-> **Fin del FSD: Módulo de Autenticación y Usuarios v1.0**
+> **Fin del FSD: Módulo de Autenticación y Usuarios v1.2**
 >
 > *Este documento define el QUÉ y CÓMO técnico del módulo de autenticación. Junto con el PRD y SAD, forma la base de documentación para implementación por desarrolladores humanos y agentes IA.*
