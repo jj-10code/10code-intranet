@@ -4,9 +4,9 @@
 
 ## Metadata
 
-- **Versión del documento**: 1.5
+- **Versión del documento**: 1.6
 - **Fecha de creación**: 2024-11-14
-- **Última actualización**: 2025-11-17
+- **Última actualización**: 2025-11-18
 - **Arquitecto principal**: Juanje Márquez - 10Code
 - **Revisores técnicos**: Pendiente
 - **Estado**: Living Document
@@ -45,7 +45,7 @@ Este SAD **NO** cubre:
 
 ### 2.1 Filosofía Arquitectónica: Monolito Modular Majestuoso
 
-El sistema sigue el patrón **"Majestic Modular Monolith"**, una arquitectura que combina lo mejor de ambos mundos:
+El sistema sigue el patrón **"Majestic Modular Monolith"**, una arquitectura que combina lo mejor de ambos mundos. Esta decisión está documentada en detalle en [ADR-001](docs/product_docs/adr/ADR-001-monolith-vs-microservices.md).
 
 **¿Por qué Monolito?**
 
@@ -66,7 +66,7 @@ El sistema sigue el patrón **"Majestic Modular Monolith"**, una arquitectura qu
 
 #### **Modularidad Interna (La Clave del "Majestuoso")**
 
-Aunque es un monolito físico, internamente está estructurado como microservicios lógicos:
+Aunque es un monolito físico, internamente está estructurado como microservicios lógicos siguiendo principios de Domain-Driven Design (DDD):
 
 - 📦 **Apps Django autocontenidas**: Cada módulo es un "bounded context" en DDD
 - 🔒 **Interfaces claras**: Service Layer como API interna entre módulos
@@ -76,7 +76,7 @@ Aunque es un monolito físico, internamente está estructurado como microservici
 
 #### **Habilitador Clave: Inertia.js**
 
-Inertia.js elimina la complejidad de mantener una API REST separada:
+Inertia.js elimina la complejidad de mantener una API REST separada. Esta decisión está documentada en [ADR-002](docs/product_docs/adr/ADR-002-django-inertia-choice.md):
 
 - **Frontend moderno (React SPA)** + **Backend tradicional (Django server-rendered)**
 - Sin necesidad de serializers DRF, endpoints REST, gestión de estado compleja
@@ -135,14 +135,15 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 
 | ID  | Decisión | Justificación Breve | Estado ADR |
 |-----|----------|---------------------|------------|
-| ADR-001 | **Monolito vs Microservicios** | Equipo pequeño, complejidad innecesaria, deployment simple | Pendiente |
-| ADR-002 | **Django + inertia-django** | Elimina API REST duplicada, desarrollo más rápido, DX superior | Pendiente |
-| ADR-003 | **PostgreSQL** | JSONB para flexibilidad, robustez, excelente soporte Django ORM | Pendiente |
-| ADR-004 | **uv como gestor de dependencias** | 10-100x más rápido que pip, compatible con pyproject.toml | Pendiente |
-| ADR-005 | **Tiptap + WeasyPrint** | Editor moderno WYSIWYG, generación PDF server-side confiable | Pendiente |
-| ADR-006 | **Celery + Redis** | Tareas asíncronas (ETL, integraciones), cache distribuido | Pendiente |
-| ADR-007 | **OpenRouter para LLMs** | Acceso multi-modelo, cost-effective, sin vendor lock-in | Pendiente |
-| ADR-008 | **Service Layer Pattern** | Desacoplamiento, transacciones, testabilidad, evolución a async | Pendiente |
+| [ADR-001](docs/product_docs/adr/ADR-001-monolith-vs-microservices.md) | **Monolito Modular Majestuoso** | Equipo pequeño, complejidad innecesaria, deployment simple | ✅ Aceptado |
+| [ADR-002](docs/product_docs/adr/ADR-002-django-inertia-choice.md) | **Django + Inertia.js** | Elimina API REST duplicada, desarrollo más rápido, DX superior | ✅ Aceptado |
+| [ADR-003](docs/product_docs/adr/ADR-003-PostgreSQL-Database.md) | **PostgreSQL 18+** | JSONB para flexibilidad, robustez, excelente soporte Django ORM | ✅ Aceptado |
+| [ADR-004](docs/product_docs/adr/ADR-004-uv-for-dependencies.md) | **uv como gestor de dependencias** | 10-100x más rápido que pip, compatible con pyproject.toml | ✅ Aceptado |
+| [ADR-005](docs/product_docs/adr/ADR-005-tiptap-weasyprint-docs.md) | **Tiptap + WeasyPrint** | Editor moderno WYSIWYG, generación PDF server-side confiable | ✅ Aceptado |
+| [ADR-006](docs/product_docs/adr/ADR-006-async-task-cache-celery-redis.md) | **Celery + Redis** | Tareas asíncronas (ETL, integraciones), cache distribuido | ✅ Aceptado |
+| [ADR-007](docs/product_docs/adr/ADR-007-openrouter-llm-integration.md) | **OpenRouter para LLMs** | Acceso multi-modelo, cost-effective, sin vendor lock-in | ✅ Aceptado |
+| [ADR-008](docs/product_docs/adr/ADR-008-servide-layer-pattern.md) | **Service Layer Pattern** | Desacoplamiento, transacciones, testabilidad, evolución a async | ✅ Aceptado |
+| [ADR-009](docs/product_docs/adr/ADR-009-shared-features-and-components.md) | **Componentes Transversales** | Patrón para funcionalidades shared (editor docs, PDFs) | ✅ Aceptado |
 
 ---
 
@@ -224,7 +225,7 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 | **Vite** | 7+ | Build tool & dev server | HMR instantáneo, builds optimizados, ESM nativo |
 | **Tailwind CSS** | 4+ | Utility-first CSS | Desarrollo rápido, mobile-first, tree-shaking automático |
 | **shadcn/ui** | - | Component library | Componentes accesibles (ARIA), customizables, copy-paste (no NPM bloat) |
-| **Tiptap** | 2+ | Editor WYSIWYG | Basado en ProseMirror, extensible, markdown-friendly |
+| **[Tiptap](docs/product_docs/adr/ADR-005-tiptap-weasyprint-docs.md)** | 2+ | Editor WYSIWYG | Basado en ProseMirror, extensible, markdown-friendly |
 | **React Hook Form** | 7+ | Gestión de formularios | Performance (uncontrolled), validación, integración con yup/zod |
 | **TanStack Query** | 5+ | Data fetching (si necesario) | Cache inteligente, refetch automático, optimistic updates |
 
@@ -239,7 +240,7 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 
 | Componente | Versión | Propósito | Fase de Uso |
 |------------|---------|-----------|-------------|
-| **OpenRouter** | - | Gateway multi-modelo LLM | **MVP**: Estimaciones con prompting |
+| **[OpenRouter](docs/product_docs/adr/ADR-007-openrouter-llm-integration.md)** | - | Gateway multi-modelo LLM | **MVP**: Estimaciones con prompting |
 | **scikit-learn** | 1.4+ | ML clásico (regresión, clustering) | **Fase 2+**: Si se valida necesidad de ML entrenado |
 | **pandas** | 2.1+ | Manipulación de datos, análisis | **Fase 2+**: Para análisis de datos históricos |
 | **numpy** | 1.26+ | Operaciones numéricas | **Fase 2+**: Base de scikit-learn |
@@ -262,6 +263,8 @@ Las siguientes decisiones tienen **ADRs detallados** que se crearán en `/docs/a
 | **Playwright** | 1.40+ | End-to-end testing |
 
 ### 3.3 Gestión de Dependencias con `uv`
+
+Esta decisión está documentada en [ADR-004](docs/product_docs/adr/ADR-004-uv-for-dependencies.md).
 
 **Archivo [`pyproject.toml`](pyproject.toml) (PEP 621):**
 
@@ -427,7 +430,9 @@ Estos flujos críticos aseguran la trazabilidad completa desde la oportunidad co
 
 ### 5.2 Patrón Service Layer (80% comunicación)
 
-**¿Por qué Fat Services?** Usamos servicios 'gordos' (fat services) que contienen toda la lógica de negocio, validaciones y orquestación. Esto desacopla la lógica de negocio de las vistas y modelos, facilitando testing, reutilización y evolución hacia async. Los servicios manejan transacciones atómicas, side effects y logging centralizado.
+**¿Por qué Fat Services?** Usamos servicios 'gordos' (fat services) que contienen toda la lógica de negocio, validaciones y orquestación. Esta decisión está documentada en [ADR-008](docs/product_docs/adr/ADR-008-servide-layer-pattern.md). Los servicios desacoplan la lógica de negocio de las vistas y modelos, facilitando testing, reutilización y evolución hacia async. Los servicios manejan transacciones atómicas, side effects y logging centralizado.
+
+Los patrones específicos de Service Layer, Selectors y Thin Models están definidos en [`.rules/DJANGO_PATTERNS.md`](.rules/DJANGO_PATTERNS.md).
 
 **Template de Service:**
 
@@ -542,6 +547,8 @@ def get_projects_list(
 ### 6.1 Estrategia de Datos
 
 #### PostgreSQL como Base de Datos Principal
+
+Esta decisión está documentada en [ADR-003](docs/product_docs/adr/ADR-003-PostgreSQL-Database.md).
 
 **Justificación técnica:**
 
@@ -1137,6 +1144,8 @@ def get_projects_list(request):
 ```
 
 ### 8.3 Tareas Asíncronas con Celery
+
+Esta decisión está documentada en [ADR-006](docs/product_docs/adr/ADR-006-async-task-cache-celery-redis.md).
 
 #### Casos de Uso para Celery
 
@@ -1924,9 +1933,9 @@ alerts:
 
 **Reglas arquitectónicas:**
 
-- `.rules/ARCHITECTURE_RULES.md` - Comunicación entre módulos
-- `.rules/DJANGO_PATTERNS.md` - Patrones Django obligatorios
-- `.rules/INERTIA_FRONTEND.md` - Patrones frontend React + Inertia
+- [`.rules/ARCHITECTURE_RULES.md`](.rules/ARCHITECTURE_RULES.md) - Comunicación entre módulos
+- [`.rules/DJANGO_PATTERNS.md`](.rules/DJANGO_PATTERNS.md) - Patrones Django obligatorios
+- [`.rules/INERTIA_FRONTEND.md`](.rules/INERTIA_FRONTEND.md) - Patrones frontend React + Inertia
 
 **FSDs por módulo** (a crear):
 
@@ -2017,6 +2026,7 @@ alerts:
 | **1.3** | 2025-11-17 | Juanje Márquez | Incorporación de Pydantic para validaciones de input en backend |
 | **1.4** | 2025-11-17 | Juanje Márquez | Referencias a archivos Docker implementados y explicación básica de la implementación |
 | **1.5** | 2025-11-17 | Juanje Márquez | Actualización sección de logging para coherencia con implementación MVP (logging básico vs structlog) |
+| **1.6** | 2025-11-18 | Juanje Márquez | Consolidación con fuentes de verdad: referencias a ADRs y .rules, corrección de inconsistencias, optimización como índice navegable |
 
 ### Próximas Actualizaciones Previstas
 
@@ -2039,8 +2049,8 @@ Este documento se considera aprobado cuando:
 1. ✅ Coherencia verificada con PRD
 2. ✅ Alineación con reglas arquitectónicas (`.rules/`)
 3. ✅ Patrones definidos claramente para desarrollo
-4. ⏳ ADRs críticos creados (ADR-001, ADR-002, ADR-008)
-5. ⏳ Primer FSD creado usando este SAD como referencia
+4. ✅ ADRs críticos creados (ADR-001, ADR-002, ADR-008)
+5. ✅ Primer FSD creado usando este SAD como referencia
 
 ### Vigencia
 
@@ -2076,11 +2086,11 @@ Este Software Architecture Document define la arquitectura técnica completa de 
 ### Contacto
 
 **Arquitecto Principal**: Juanje Márquez (10Code)
-**Última actualización**: 2025-11-17
-**Versión del documento**: 1.5
+**Última actualización**: 2025-11-18
+**Versión del documento**: 1.6
 
 ---
 
-> **Fin del Software Architecture Document - Intranet 10Code v1.5**
+> **Fin del Software Architecture Document - Intranet 10Code v1.6**
 >
 > *Este SAD define el CÓMO técnico del sistema. Junto con el PRD (QUÉ y POR QUÉ), forma la base de documentación del proyecto.*
