@@ -3,9 +3,9 @@
 ## Metadata
 
 - **Módulo Django**: `apps/accounts`
-- **Versión**: 1.2
+- **Versión**: 1.3
 - **Fecha de creación**: 2024-11-18
-- **Última actualización**: 2024-11-18
+- **Última actualización**: 2025-11-18
 - **Owner**: Juanje Márquez - 10Code
 - **Estado**: Approved
 - **Prioridad**: Crítica (Fase 0 - Fundamentos)
@@ -84,8 +84,10 @@ Este módulo es la piedra angular del sistema, proporcionando el sistema de cont
 
 - **US-USER-001**: Como administrador, quiero crear usuarios manualmente para dar acceso anticipado antes de su primer login con Google
 - **US-USER-002**: Como administrador, quiero desactivar usuarios temporalmente sin eliminar sus datos para gestionar ausencias prolongadas o bajas temporales
-- **US-USER-003**: Como usuario, quiero ver y editar mi perfil personal (nombre, avatar, datos de contacto) para mantener mi información actualizada
+- **US-USER-003**: Como usuario, quiero ver y editar mi perfil personal (solo avatar/foto) para mantener mi información actualizada
 - **US-USER-004**: Como administrador, quiero visualizar lista completa de usuarios con filtros (activo/inactivo, rol, departamento) para gestión eficiente
+- **US-USER-005**: Como usuario, quiero proporcionar mi fecha de nacimiento al registrarme para cumplir con requisitos de RR.HH.
+- **US-USER-006**: Como usuario, quiero poder actualizar mi fecha de nacimiento máximo una vez al año para corregir errores, con auditoría completa
 
 #### Roles y Permisos
 
@@ -100,6 +102,7 @@ Este módulo es la piedra angular del sistema, proporcionando el sistema de cont
 - **US-AUDIT-002**: Como responsable de seguridad, quiero recibir alertas de intentos de login desde cuentas no autorizadas para respuesta rápida
 - **US-AUDIT-003**: Como auditor, quiero exportar logs de acceso para cumplimiento normativo y auditorías externas
 - **US-AUDIT-004**: Como sistema, debo registrar cambios en permisos críticos (elevación de privilegios, desactivación de usuarios) para trazabilidad completa
+- **US-AUDIT-005**: Como auditor, quiero ver historial completo de cambios de fecha de nacimiento para detectar posibles abusos relacionados con beneficios de RR.HH.
 
 ### 3.2 Reglas de Negocio Críticas
 
@@ -142,6 +145,8 @@ Este módulo es la piedra angular del sistema, proporcionando el sistema de cont
 3. **RGPD - Portabilidad**: El usuario debe poder exportar todos sus datos personales en formato JSON estructurado.
 
 4. **RGPD - Derecho al olvido**: Tras 4 años de inactividad, los datos personales no esenciales deben ser eliminados automáticamente.
+
+5. **Validación de fecha de nacimiento**: Los cambios de fecha de nacimiento están limitados a máximo 1 vez al año para prevenir abusos relacionados con beneficios de RR.HH. (días adicionales de vacaciones). Validaciones más complejas se implementarán en el módulo de RR.HH.
 
 ---
 
@@ -224,6 +229,7 @@ erDiagram
 - `email` (EmailField, unique, primary identifier)
 - `first_name`, `last_name` (extraídos de Google)
 - `avatar_url` (URL del avatar de Google)
+- `date_of_birth` (DateField, obligatorio, fecha de nacimiento con implicaciones para RR.HH.)
 - `is_active` (para desactivación sin borrado)
 - `is_staff` (acceso a Django Admin)
 - `last_login`, `date_joined` (timestamps automáticos)
@@ -286,7 +292,7 @@ erDiagram
 **Campos clave**:
 
 - `user` (ForeignKey a User, nullable para eventos del sistema)
-- `action` (string: `login`, `logout`, `permission_change`, `password_reset`, etc.)
+- `action` (string: `login`, `logout`, `permission_change`, `profile_update`, `birthday_change`, etc.)
 - `resource_type` (ej. `User`, `Role`, `Project`)
 - `resource_id` (ID del recurso afectado)
 - `metadata` (JSONField con detalles adicionales)
@@ -305,16 +311,18 @@ erDiagram
 **Funciones principales**:
 
 1. **`create_user_from_google(google_profile_data: dict) -> User`**
-   - Crea usuario automáticamente tras primer login OAuth exitoso
-   - Extrae datos de perfil de Google
-   - Asigna rol por defecto `employee`
-   - Registra evento en audit log
+    - Crea usuario automáticamente tras primer login OAuth exitoso
+    - Extrae datos de perfil de Google
+    - Solicita fecha de nacimiento obligatoria en onboarding inicial
+    - Asigna rol por defecto `employee`
+    - Registra evento en audit log
 
-2. **`create_user_manually(email: str, first_name: str, last_name: str, roles: list, created_by: User) -> User`**
-   - Creación manual por administrador
-   - Valida dominio @10code.es
-   - Asigna roles especificados
-   - Audita la creación
+2. **`create_user_manually(email: str, first_name: str, last_name: str, date_of_birth: date, roles: list, created_by: User) -> User`**
+    - Creación manual por administrador
+    - Valida dominio @10code.es
+    - Requiere fecha de nacimiento obligatoria
+    - Asigna roles especificados
+    - Audita la creación
 
 3. **`deactivate_user(user: User, deactivated_by: User, reason: str) -> None`**
    - Marca `is_active = False`
@@ -322,10 +330,11 @@ erDiagram
    - Audita desactivación con razón
    - NO elimina datos (soft delete)
 
-4. **`update_user_profile(user: User, profile_data: dict) -> User`**
-   - Actualiza datos editables (nombre, avatar opcional)
-   - Valida campos
-   - No permite cambiar email (controlado por Google)
+4. **`update_user_profile(user: User, profile_data: dict, updated_by: User) -> User`**
+    - Actualiza datos editables (solo avatar/foto)
+    - Valida cambios de fecha de nacimiento (máximo 1 vez al año)
+    - Registra auditoría completa de cambios (especialmente fecha de nacimiento)
+    - No permite cambiar email, nombre o apellido (controlados por Google)
 
 5. **`anonymize_user(user: User) -> None`**
    - Anonimiza email: `usuario_[id]_anonimizado@10code.es`
@@ -1014,6 +1023,7 @@ sequenceDiagram
 | `email` | Único en el sistema | "Ya existe un usuario con este email" |
 | `first_name` | No vacío, max 150 chars | "Nombre es requerido" |
 | `last_name` | No vacío, max 150 chars | "Apellido es requerido" |
+| `date_of_birth` | Fecha válida, usuario debe tener al menos 16 años, máximo 1 cambio al año | "Fecha de nacimiento inválida o cambio no permitido" |
 
 #### Validaciones de Rol
 
@@ -1705,6 +1715,7 @@ Métricas clave a trackear:
 | 1.0 | 2024-11-18 | Juanje Márquez | Creación inicial del FSD de Autenticación y Usuarios |
 | 1.1 | 2024-11-18 | Juanje Márquez | Alineación con patrones DJANGO_PATTERNS: separación Service Layer/Selectors, modelos delgados |
 | 1.2 | 2024-11-18 | Juanje Márquez | Alineación con patrones INERTIA_FRONTEND: arquitectura completa frontend, shadcn/ui, hooks, Zustand |
+| 1.3 | 2025-11-18 | Juanje Márquez | Incorporación de fecha de nacimiento obligatoria con auditoría completa y restricciones de edición de perfil |
 
 ---
 
@@ -1728,6 +1739,6 @@ Este FSD se considera aprobado cuando:
 
 ---
 
-> **Fin del FSD: Módulo de Autenticación y Usuarios v1.2**
+> **Fin del FSD: Módulo de Autenticación y Usuarios v1.3**
 >
 > *Este documento define el QUÉ y CÓMO técnico del módulo de autenticación. Junto con el PRD y SAD, forma la base de documentación para implementación por desarrolladores humanos y agentes IA.*
