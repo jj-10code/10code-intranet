@@ -464,6 +464,7 @@ erDiagram
 El frontend sigue la filosofía **Inertia.js**: el servidor es la fuente de verdad. Todas las decisiones de autorización, validación y preparación de datos ocurren en el backend Django. El frontend React recibe datos preparados y listos para renderizar.
 
 **Stack tecnológico:**
+
 - React 19 + TypeScript
 - Inertia.js 2.0 (adaptador React)
 - Vite 7 (build tool & dev server)
@@ -587,6 +588,7 @@ export default function UsersIndex({ users, filters, permissions }: Props) {
 ```
 
 **Reglas de páginas:**
+
 - ✅ **Type safety total**: Definir interface Props con todos los datos esperados del backend
 - ✅ **Layout wrapper**: Todas las páginas deben envolverse en un Layout para consistencia
 - ✅ **Head component**: Usar el componente Head de Inertia para title y meta tags
@@ -658,10 +660,12 @@ export default function UserCreate() {
 #### Integración shadcn/ui
 
 **Filosofía de dos niveles:**
+
 - **Nivel 1 - Primitivos (ui/)**: Componentes base de shadcn/ui sin modificar
 - **Nivel 2 - Aplicación (shared/)**: Componentes específicos del dominio
 
 **Instalación de componentes:**
+
 ```bash
 cd frontend
 npx shadcn-ui@latest add button card input form badge
@@ -691,6 +695,7 @@ npx shadcn-ui@latest add button card input form badge
 #### Custom Hooks
 
 **Hook de Permisos:**
+
 ```typescript
 // frontend/src/hooks/usePermissions.ts
 
@@ -727,6 +732,7 @@ export default function UsersIndex() {
 ```
 
 **Hook de Usuario Actual:**
+
 ```typescript
 // frontend/src/hooks/useAuth.ts
 
@@ -842,6 +848,7 @@ export default function UsersGrid({ users }: Props) {
 #### Optimizaciones de Performance
 
 **Lazy Loading de componentes:**
+
 ```typescript
 import { lazy, Suspense } from 'react'
 
@@ -857,6 +864,7 @@ export default function UserShow() {
 ```
 
 **Memoización:**
+
 ```typescript
 import { useMemo } from 'react'
 
