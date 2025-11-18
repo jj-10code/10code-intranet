@@ -48,12 +48,20 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # Requerido por allauth
 ]
 
 THIRD_PARTY_APPS = [
+    # Inertia.js
     "inertia",
+    # REST Framework
     "rest_framework",
     "corsheaders",
+    # Allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
 ]
 
 LOCAL_APPS = [
@@ -161,3 +169,54 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ========================================
+# AUTH CONFIGURATION
+# ========================================
+
+# Usar modelo de Usuario personalizado
+AUTH_USER_MODEL = "accounts.User"
+
+# Sitio ID requerido por django-allauth
+SITE_ID = 1
+
+# Configuración de django-allauth
+AUTHENTICATION_BACKENDS = [
+    # Backend de Django por defecto (permite superuser login)
+    "django.contrib.auth.backends.ModelBackend",
+    # Backend de allauth para autenticación con terceros
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# Configuración de allauth
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica el email
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+
+# Configuración de Social Account
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Crear usuario automáticamente
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"  # Custom adapter
+
+# Configuración del proveedor Google
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+        },
+        "FETCH_USERINFO": True,
+    }
+}
+
+# URLs de redirección después de login/logout
+LOGIN_REDIRECT_URL = "/dashboard/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+SOCIALACCOUNT_LOGIN_ON_GET = True
