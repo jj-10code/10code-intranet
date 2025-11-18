@@ -117,7 +117,11 @@ Hemos decidido usar **Django + Inertia.js** porque:
 
 3. **Complejidad innecesaria de API REST**: Para sistema interno monousuario, mantener API REST separada es overhead sin beneficio
 
-4. **Ejemplo real de código simplificado**:
+4. **Testing 50% más simple**: Un test Inertia vs test API + test React
+
+5. **Migración futura viable**: Si necesitamos API REST después, podemos añadirla gradualmente sin reescribir
+
+6. **Ejemplo real de código simplificado**:
 
 ```python
 # CON INERTIA (5 líneas) ✅
@@ -138,10 +142,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def list(self, request):
         # Más lógica de permisos, filtros, paginación...
 ```
-
-5. **Testing 50% más simple**: Un test Inertia vs test API + test React
-
-6. **Migración futura viable**: Si necesitamos API REST después, podemos añadirla gradualmente sin reescribir
 
 ---
 
