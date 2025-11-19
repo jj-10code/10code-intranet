@@ -202,3 +202,7 @@ rebuild: ## Reconstruir imágenes desde cero (sin caché)
 	$(COMPOSE) down
 	$(COMPOSE) build --no-cache --pull
 	@echo "✅ Rebuild completado. Ejecuta 'make up' para iniciar"
+
+clean-rebuild: ## Limpieza completa y rebuild (soluciona errores de caché)
+	@echo "🧹 Limpieza completa de Docker y rebuild..."
+	@bash scripts/clean-rebuild.sh
