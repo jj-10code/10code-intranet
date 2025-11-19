@@ -196,3 +196,9 @@ prod-up: ## Levantar en modo producción
 
 prod-logs: ## Ver logs en producción
 	docker compose -f compose.yml logs -f
+
+rebuild: ## Reconstruir imágenes desde cero (sin caché)
+	@echo "🔨 Reconstruyendo imágenes sin caché..."
+	$(COMPOSE) down
+	$(COMPOSE) build --no-cache --pull
+	@echo "✅ Rebuild completado. Ejecuta 'make up' para iniciar"
