@@ -23,7 +23,7 @@ class TestAuthService:
         assert AuditLog.objects.filter(user=user, action=AuditLog.Action.LOGIN).exists()
 
     def test_handle_successful_google_login_returning_user(self):
-        user = UserFactory(last_login=timezone.now())
+        user = UserFactory(last_login=timezone.now(), date_joined=timezone.now() - timezone.timedelta(days=1))
         request = Mock()
         request.META = {"REMOTE_ADDR": "127.0.0.1"}
         

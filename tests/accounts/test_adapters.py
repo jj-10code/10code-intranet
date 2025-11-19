@@ -38,6 +38,7 @@ class TestSocialAccountAdapter:
             "family_name": "Doe",
             "picture": "http://example.com/avatar.jpg"
         }
+        sociallogin.user = UserFactory.build()
         
         user = UserFactory.build() # Not saved
         # Mock super().populate_user behavior
@@ -67,6 +68,7 @@ class TestSocialAccountAdapter:
             "sub": "12345",
             "email": "test@10code.es"
         }
+        sociallogin.user = UserFactory.build()
         
         user = UserFactory()
         # Mock super().save_user to return the user
