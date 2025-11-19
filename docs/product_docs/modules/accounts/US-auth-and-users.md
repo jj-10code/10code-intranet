@@ -71,6 +71,7 @@ Escenario: Primer login exitoso
 - [ ] Validación dominio @10code.es en callback
 - [ ] Service Layer: `AuthService.authenticate_with_google()`
 - [ ] Tests: 70% unit, 20% integration, 10% e2e
+- [ ] Vistas inertia necesarias básicas creadas y funcionales
 - [ ] Seguridad: HTTPS obligatorio, CSRF protection
 - [ ] Auditoría: Login events logged
 
