@@ -32,6 +32,19 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
                 f"Tu email '{email}' no está autorizado."
             )
 
+        # IMPORTANTE: También valida el claim 'hd' del ID token
+        extra_data = sociallogin.account.extra_data
+        hd = extra_data.get('hd', '')
+        
+        if hd != '10code.es':
+            raise ImmediateHttpResponse(
+                render(request, 'account/domain_restricted.html', {
+                    'email': email,
+                    'allowed_domain': '10code.es',
+                    'error': 'Domain verification failed'
+                })
+            )
+
     def populate_user(self, request, sociallogin, data):
         """
         Personaliza cómo se popula el User desde datos de Google.

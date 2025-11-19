@@ -93,6 +93,7 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
+                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -200,6 +201,9 @@ ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Crear usuario automáticamente
 SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica
 SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Confía en emails verificados por Google
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_LOGIN_ON_GET = False  # Seguridad: evita login en GET
 SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"  # Custom adapter
 
 # Configuración del proveedor Google
@@ -211,8 +215,10 @@ SOCIALACCOUNT_PROVIDERS = {
         ],
         "AUTH_PARAMS": {
             "access_type": "online",
+            "hd": "10code.es",  # Filtra el selector de cuentas
         },
         "FETCH_USERINFO": True,
+        "OAUTH_PKCE_ENABLED": True,
     }
 }
 
