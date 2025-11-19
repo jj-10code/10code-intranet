@@ -33,11 +33,51 @@
 **Prioridad:** [P1 / P2 / P3]
 
 ```gherkin
-Escenario: [Descripción del escenario de prueba]
-  Dado que [contexto inicial / precondición]
-  Cuando [acción del usuario o evento del sistema]
-  Entonces [resultado esperado / postcondición]
-  Y [resultado adicional si aplica]
+# Opcional: nombre de la característica
+Característica: <nombre de la funcionalidad> y su CA
+
+# Opcional: precondiciones comunes
+Antecedentes:
+  Dado <precondición común 1>
+  Y <precondición común 2>
+
+Escenario: <título del escenario>
+  Dado <estado inicial específico>
+  Y <otros supuestos necesarios>
+  Cuando <acción del usuario o evento del sistema>
+  Y <acciones adicionales si aplican>
+  Entonces <resultado observable/verificable>
+  Y <reglas de negocio/mensajes/efectos adicionales>
+
+# Variante con ejemplos parametrizados
+Esquema del escenario: <título>
+  Dado <estado inicial con <variable>>
+  Cuando <acción con <variable>>
+  Entonces <resultado con <variable>>
+Ejemplos:
+  | variable | ... |
+  | valor1   | ... |
+  | valor2   | ... |
+```
+
+#### Ejemplo rápido
+
+```gherkin
+Característica: Recuperación de contraseña (o CA-02)
+
+Escenario: Solicitud de restablecimiento válida
+  Dado que el usuario está en la página "Olvidé mi contraseña"
+  Y existe una cuenta asociada al correo "persona@ejemplo.com"
+  Cuando envía el formulario con "persona@ejemplo.com"
+  Entonces el sistema envía un correo con enlace de restablecimiento
+  Y se muestra un mensaje de confirmación en pantalla
+
+Escenario: Correo no registrado
+  Dado que el usuario está en la página "Olvidé mi contraseña"
+  Y no existe ninguna cuenta asociada al correo "nadie@ejemplo.com"
+  Cuando envía el formulario con "nadie@ejemplo.com"
+  Entonces se muestra un mensaje indicando que, si existe una cuenta, recibirá instrucciones
+  Y por seguridad no se revela si el correo está registrado
 ```
 
 **Casos edge:**
