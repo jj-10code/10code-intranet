@@ -61,6 +61,8 @@ services:
     secrets:
       - db_password
       - django_secret_key
+      - google_client_id
+      - google_client_secret
     ports:
       - "${WEB_PORT:-8000}:8000"
     depends_on:
@@ -93,6 +95,8 @@ services:
     secrets:
       - db_password
       - django_secret_key
+      - google_client_id
+      - google_client_secret
     depends_on:
       db:
         condition: service_healthy
@@ -123,6 +127,8 @@ services:
     secrets:
       - db_password
       - django_secret_key
+      - google_client_id
+      - google_client_secret
     depends_on:
       db:
         condition: service_healthy
@@ -156,3 +162,7 @@ secrets:
     file: ./secrets/db_password.txt
   django_secret_key:
     file: ./secrets/django_secret_key.txt
+  google_client_id:
+    file: ./secrets/google_client_id.txt
+  google_client_secret:
+    file: ./secrets/google_client_secret.txt

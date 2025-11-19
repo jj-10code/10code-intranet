@@ -48,12 +48,22 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",  # Requerido por allauth
 ]
 
 THIRD_PARTY_APPS = [
+    # Inertia.js
     "inertia",
+    # REST Framework
     "rest_framework",
     "corsheaders",
+    # Allauth
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "allauth.socialaccount.providers.google",
+    # Celery
+    "django_celery_beat",
 ]
 
 LOCAL_APPS = [
@@ -70,10 +80,12 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "allauth.account.middleware.AccountMiddleware",  # Requerido por django-allauth
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # Habilitar CORS middleware
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Sirve archivos estáticos en producción
+    "inertia.middleware.InertiaMiddleware",  # Inertia.js middleware
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -81,10 +93,11 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "apps" / "core" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
+                "django.template.context_processors.debug",
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
@@ -161,3 +174,89 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ========================================
+# AUTH CONFIGURATION
+# ========================================
+
+# Usar modelo de Usuario personalizado
+AUTH_USER_MODEL = "accounts.User"
+
+# Sitio ID requerido por django-allauth
+SITE_ID = 1
+
+# Configuración de django-allauth
+AUTHENTICATION_BACKENDS = [
+    # Backend de Django por defecto (permite superuser login)
+    "django.contrib.auth.backends.ModelBackend",
+    # Backend de allauth para autenticación con terceros
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+# Configuración de allauth
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica el email
+ACCOUNT_USER_MODEL_USERNAME_FIELD = "username"
+ACCOUNT_USER_MODEL_EMAIL_FIELD = "email"
+
+# Configuración de Social Account
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Crear usuario automáticamente
+SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Confía en emails verificados por Google
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
+SOCIALACCOUNT_LOGIN_ON_GET = False  # Seguridad: evita login en GET
+SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"  # Custom adapter
+
+# Configuración del proveedor Google
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": [
+            "profile",
+            "email",
+        ],
+        "AUTH_PARAMS": {
+            "access_type": "online",
+            "hd": "10code.es",  # Filtra el selector de cuentas
+        },
+        "FETCH_USERINFO": True,
+        "OAUTH_PKCE_ENABLED": True,
+    }
+}
+
+# URLs de redirección después de login/logout
+LOGIN_REDIRECT_URL = "/dashboard/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+
+# ========================================
+# INERTIA.JS CONFIGURATION
+# ========================================
+
+# Layout del template base de Inertia
+INERTIA_LAYOUT = "app.html"
+
+# Versión de assets (cambiar para invalidar cache del navegador)
+INERTIA_VERSION = "1.0"
+
+# ========================================
+# CELERY CONFIGURATION
+# ========================================
+
+# Broker y Backend
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# Serialización
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+# Zona horaria
+CELERY_TIMEZONE = TIME_ZONE
+
+# Configuración de tareas
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutos (warning antes del hard limit)

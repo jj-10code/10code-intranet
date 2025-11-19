@@ -13,7 +13,7 @@ name = "10code-intranet"
 version = "0.1.0"
 description = "Sistema de herramientas internas para el control productivo de 10Code"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 license = { text = "Proprietary" }
 authors = [{ name = "10Code", email = "jmarquez@10code.es" }]
 keywords = [
@@ -52,6 +52,7 @@ dependencies = [
 
     # Authentication
     "django-allauth>=65.13.0", # Autenticación y gestión de usuarios
+    "pyjwt>=2.10.1",           # JWT para autenticación OAuth (requerido por allauth)
 
     # REST API (para integraciones internas)
     "djangorestframework>=3.16.1", # Django REST Framework
