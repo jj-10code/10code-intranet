@@ -28,6 +28,7 @@ Este documento describe cómo configurar Google OAuth 2.0 para la autenticación
 **Nota**: Aunque Google+ está deprecado, la API sigue siendo necesaria para obtener información del perfil.
 
 Alternativamente, habilita:
+
 - **Google People API** (recomendado)
 - **Google Identity Toolkit API**
 
@@ -132,6 +133,7 @@ chmod 600 secrets/google_client_secret.txt
 ## Paso 6: Configurar Social App en Django Admin
 
 1. Inicia el servidor de desarrollo:
+
    ```bash
    python manage.py runserver
    ```
@@ -139,6 +141,7 @@ chmod 600 secrets/google_client_secret.txt
 2. Ve a `http://localhost:8000/admin/`
 
 3. Inicia sesión con un superusuario (créalo si no existe):
+
    ```bash
    python manage.py createsuperuser --email admin@10code.es
    ```
@@ -174,10 +177,13 @@ chmod 600 secrets/google_client_secret.txt
 **Causa**: La URI de redirección no coincide con las configuradas en Google Cloud Console.
 
 **Solución**:
+
 1. Verifica que la URI en Google Cloud Console sea exactamente:
-   ```
+
+   ```bash
    http://localhost:8000/accounts/google/login/callback/
    ```
+
 2. Asegúrate de que termine con `/`
 3. Verifica que el protocolo sea correcto (`http` vs `https`)
 
@@ -186,6 +192,7 @@ chmod 600 secrets/google_client_secret.txt
 **Causa**: Client ID o Secret incorrecto.
 
 **Solución**:
+
 1. Verifica que las credenciales en Django Admin coincidan exactamente con las de Google Cloud Console
 2. Revisa que no haya espacios en blanco al inicio o final
 
@@ -194,6 +201,7 @@ chmod 600 secrets/google_client_secret.txt
 **Causa**: El email no es de @10code.es.
 
 **Solución**:
+
 - Solo se permiten usuarios con email @10code.es
 - Verifica que estés usando la cuenta correcta
 
@@ -202,6 +210,7 @@ chmod 600 secrets/google_client_secret.txt
 **Causa**: `SITE_ID` incorrecto o sitio no configurado.
 
 **Solución**:
+
 1. Verifica `SITE_ID = 1` en settings
 2. Asegúrate de que el sitio con ID=1 esté configurado en Django Admin
 
@@ -218,6 +227,7 @@ Para producción:
    - Nombre: `10Code Intranet`
 
 3. **Usa Docker Secrets** para credenciales:
+
    ```yaml
    # compose.yml
    secrets:
