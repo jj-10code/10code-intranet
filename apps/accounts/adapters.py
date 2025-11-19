@@ -21,14 +21,14 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
 
     ALLOWED_DOMAIN = "10code.es"
 
-    def get_app(self, request, provider):
+    def get_app(self, request, provider, client_id=None, **kwargs):
         """
         Obtiene la aplicación social configurada.
 
         Proporciona mejor manejo de errores cuando la app no existe.
         """
         try:
-            return super().get_app(request, provider)
+            return super().get_app(request, provider, client_id=client_id, **kwargs)
         except ObjectDoesNotExist:
             raise ObjectDoesNotExist(
                 f"SocialApp para provider '{provider}' no está configurada. "
