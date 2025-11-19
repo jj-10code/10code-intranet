@@ -20,6 +20,9 @@ if [ "$1" != "celery" ]; then
 
     echo "[entrypoint] 📦 Collecting static files..."
     python manage.py collectstatic --noinput --clear
+
+    echo "[entrypoint] 🔐 Setting up social applications..."
+    python scripts/setup_social_app.py
 fi
 
 echo "[entrypoint] 🎯 Starting application: $@"
