@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10code Intranet</title>
+
+  {# En desarrollo usamos Vite dev server (puerto 5173) #}
+  {# IMPORTANTE: Vite usa base: '/static/' en vite.config.ts #}
+  <script type="module">
+    import RefreshRuntime from 'http://localhost:5173/static/@react-refresh'
+    RefreshRuntime.injectIntoGlobalHook(window)
+    window.$RefreshReg$ = () => { }
+    window.$RefreshSig$ = () => (type) => type
+    window.__vite_plugin_react_preamble_installed__ = true
+  </script>
+  <script type="module" src="http://localhost:5173/static/@vite/client"></script>
+  <script type="module" src="http://localhost:5173/static/src/main.tsx"></script>
+</head>
+
+<body>
+  <div id="app" data-page='{{ page|safe }}'></div>
+</body>
+
+</html>

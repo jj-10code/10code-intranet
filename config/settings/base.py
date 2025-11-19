@@ -85,6 +85,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",  # Habilitar CORS middleware
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Sirve archivos estáticos en producción
+    "inertia.middleware.InertiaMiddleware",  # Inertia.js middleware
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -92,7 +93,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "apps" / "core" / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -228,6 +229,16 @@ SOCIALACCOUNT_PROVIDERS = {
 # URLs de redirección después de login/logout
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+
+# ========================================
+# INERTIA.JS CONFIGURATION
+# ========================================
+
+# Layout del template base de Inertia
+INERTIA_LAYOUT = "app.html"
+
+# Versión de assets (cambiar para invalidar cache del navegador)
+INERTIA_VERSION = "1.0"
 
 # ========================================
 # CELERY CONFIGURATION
