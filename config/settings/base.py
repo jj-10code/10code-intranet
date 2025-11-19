@@ -62,6 +62,8 @@ THIRD_PARTY_APPS = [
     "allauth.account",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
+    # Celery
+    "django_celery_beat",
 ]
 
 LOCAL_APPS = [
@@ -225,3 +227,24 @@ SOCIALACCOUNT_PROVIDERS = {
 # URLs de redirección después de login/logout
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+
+# ========================================
+# CELERY CONFIGURATION
+# ========================================
+
+# Broker y Backend
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# Serialización
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+
+# Zona horaria
+CELERY_TIMEZONE = TIME_ZONE
+
+# Configuración de tareas
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+CELERY_TASK_SOFT_TIME_LIMIT = 25 * 60  # 25 minutos (warning antes del hard limit)
