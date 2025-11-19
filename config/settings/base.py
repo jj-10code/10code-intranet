@@ -225,4 +225,3 @@ SOCIALACCOUNT_PROVIDERS = {
 # URLs de redirección después de login/logout
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
-SOCIALACCOUNT_LOGIN_ON_GET = True

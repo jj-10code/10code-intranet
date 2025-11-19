@@ -5,7 +5,9 @@ Incluye validaciones específicas de negocio para autenticación.
 """
 
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import render
 
+from allauth.account.adapter import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
 
