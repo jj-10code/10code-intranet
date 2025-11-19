@@ -478,6 +478,8 @@ mediafiles/
 .kilocode/*
 .kilocode
 .kilocodemodes
+.agent/workflows/*
+.agent/
 
 # Lock files (keep uv.lock in Git!)
 # DON'T ignore uv.lock - it's needed for reproducible builds
