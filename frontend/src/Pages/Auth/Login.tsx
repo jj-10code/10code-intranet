@@ -4,10 +4,10 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/design-system/components/ui/separator"
 import { LogIn } from "lucide-react"
 
 interface LoginProps {
@@ -17,28 +17,57 @@ interface LoginProps {
 
 export default function Login({ google_login_url, title }: LoginProps) {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+        <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
             <Head title={title} />
-            <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
-                    <CardTitle className="text-2xl font-bold">10Code Intranet</CardTitle>
-                    <CardDescription>
-                        Acceso exclusivo para empleados de 10Code
-                    </CardDescription>
+            <Card className="w-full max-w-md shadow-lg">
+                <CardHeader className="space-y-4 text-center">
+                    <div className="mx-auto w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                        <span className="text-primary-foreground text-xl font-bold">10</span>
+                    </div>
+                    <div className="space-y-2">
+                        <CardTitle className="text-2xl font-bold tracking-tight">
+                            Bienvenido a 10Code
+                        </CardTitle>
+                        <CardDescription>
+                            Accede a tu intranet corporativa
+                        </CardDescription>
+                    </div>
                 </CardHeader>
-                <CardContent className="grid gap-4">
-                    <div className="text-center text-sm text-muted-foreground">
-                        Inicia sesión con tu cuenta corporativa
+                
+                <CardContent className="space-y-6">
+                    <div className="space-y-4">
+                        <Button 
+                            className="w-full h-11 text-sm font-medium" 
+                            asChild
+                            size="lg"
+                        >
+                            <a 
+                                href={google_login_url}
+                                className="flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
+                                aria-label="Iniciar sesión con Google"
+                            >
+                                <LogIn className="h-5 w-5" />
+                                Continuar con Google
+                            </a>
+                        </Button>
+                    </div>
+
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                            <Separator className="w-full" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-background px-2 text-muted-foreground">
+                                Acceso exclusivo para empleados
+                            </span>
+                        </div>
+                    </div>
+
+                    <div className="text-center text-xs text-muted-foreground">
+                        Al continuar, aceptas los términos de servicio y 
+                        la política de privacidad de 10Code.
                     </div>
                 </CardContent>
-                <CardFooter>
-                    <Button className="w-full" asChild>
-                        <a href={google_login_url}>
-                            <LogIn className="mr-2 h-4 w-4" />
-                            Login con Google
-                        </a>
-                    </Button>
-                </CardFooter>
             </Card>
         </div>
     )
