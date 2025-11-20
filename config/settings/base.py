@@ -86,6 +86,7 @@ MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",  # Habilitar CORS middleware
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Sirve archivos estáticos en producción
     "inertia.middleware.InertiaMiddleware",  # Inertia.js middleware
+    "apps.core.middleware.InertiaShareMiddleware",  # Custom Inertia middleware (CSRF)
 ]
 
 ROOT_URLCONF = "config.urls"
