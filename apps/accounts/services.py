@@ -36,6 +36,19 @@ class AuthService:
         return ip
 
     @staticmethod
+    def validate_email_domain(email: str) -> bool:
+        """
+        Valida que el email pertenezca al dominio corporativo.
+
+        Args:
+            email: Email a validar
+
+        Returns:
+            True si es válido, False si no
+        """
+        return email.endswith("@10code.es")
+
+    @staticmethod
     @transaction.atomic
     def handle_successful_google_login(
         *, request: HttpRequest, user: User

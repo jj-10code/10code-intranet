@@ -52,3 +52,15 @@ class TestAuthService:
         AuthService.log_failed_login(request=request, email="fail@example.com")
 
         assert AuditLog.objects.filter(action=AuditLog.Action.LOGIN_FAILED).exists()
+        assert AuditLog.objects.filter(action=AuditLog.Action.LOGIN_FAILED).exists()
+
+    @pytest.mark.parametrize("email,expected", [
+        ("user@10code.es", True),
+        ("admin@10code.es", True),
+        ("user@gmail.com", False),
+        ("user@other.com", False),
+        ("invalid-email", False),
+        ("", False),
+    ])
+    def test_validate_email_domain(self, email, expected):
+        assert AuthService.validate_email_domain(email) == expected
