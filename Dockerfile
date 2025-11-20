@@ -70,6 +70,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copiar venv desde builder
 COPY --from=builder /tmp/build/.venv /app/.venv
 
+# Corregir shebangs en scripts del venv (problema con uv al copiar venv)
+RUN find /app/.venv/bin -type f -exec sed -i 's|#!/tmp/build/.venv/bin/python|#!/app/.venv/bin/python|' {} \;
+
 # Crear usuario no-root (SEGURIDAD)
 RUN groupadd -r appuser && \
     useradd -r -g appuser -u 1000 -m -s /sbin/nologin appuser && \
