@@ -80,6 +80,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.accounts.middleware.ActivityTrackingMiddleware",  # Activity tracking
     "allauth.account.middleware.AccountMiddleware",  # Requerido por django-allauth
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -247,6 +248,30 @@ INERTIA_VERSION = "1.0"
 # Broker y Backend
 CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
 CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+
+# ========================================
+# CACHE CONFIGURATION
+# ========================================
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("REDIS_URL", default="redis://localhost:6379/0"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+# ========================================
+# SESSION CONFIGURATION
+# ========================================
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+SESSION_COOKIE_AGE = 28800  # 8 horas (8 * 60 * 60)
+SESSION_SAVE_EVERY_REQUEST = True  # Renueva la sesión en cada request
+
 
 # Serialización
 CELERY_ACCEPT_CONTENT = ["json"]
