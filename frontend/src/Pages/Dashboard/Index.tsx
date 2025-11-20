@@ -35,7 +35,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
     return (
         <div className="min-h-screen bg-background">
             <Head title={title} />
-            
+
             {/* Header */}
             <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container flex h-16 items-center px-4">
@@ -44,7 +44,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                         <Menu className="h-5 w-5" />
                         <span className="sr-only">Toggle navigation menu</span>
                     </Button>
-                    
+
                     {/* Logo and title */}
                     <div className="mr-4 flex items-center space-x-2">
                         <div className="flex items-center justify-center w-8 h-8 bg-primary rounded-md">
@@ -54,20 +54,27 @@ export default function Dashboard({ user, title }: DashboardProps) {
                             10Code
                         </span>
                     </div>
-                    
-                    <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
+
+                    <div className="flex flex-1 items-center justify-end space-x-2">
                         {/* Navigation - hidden on mobile */}
                         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                            <Link 
-                                href="/dashboard/" 
+                            <Link
+                                href="/dashboard/"
                                 className="transition-colors hover:text-foreground/80 text-foreground"
                             >
                                 Inicio
                             </Link>
                         </nav>
-                        
+
                         {/* User menu */}
                         <div className="flex items-center space-x-2">
+                            <form action="/logout/" method="post">
+                                <input type="hidden" name="csrfmiddlewaretoken" value={csrf_token} />
+                                <Button variant="ghost" size="icon" type="submit" title="Cerrar Sesión">
+                                    <LogOut className="h-5 w-5" />
+                                    <span className="sr-only">Cerrar Sesión</span>
+                                </Button>
+                            </form>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -97,9 +104,9 @@ export default function Dashboard({ user, title }: DashboardProps) {
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
-                                        <form action="/accounts/logout/" method="post" className="w-full">
+                                        <form action="/logout/" method="post" className="w-full">
                                             <input type="hidden" name="csrfmiddlewaretoken" value={csrf_token} />
-                                            <button 
+                                            <button
                                                 type="submit"
                                                 className="flex w-full items-center px-2 py-1.5 text-sm cursor-pointer text-destructive hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
                                             >
@@ -114,15 +121,15 @@ export default function Dashboard({ user, title }: DashboardProps) {
                     </div>
                 </div>
             </header>
-            
+
             {/* Main Content */}
             <main className="flex-1 space-y-6 p-6 md:p-8">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 </div>
-                
+
                 <Separator />
-                
+
                 {/* Welcome Card */}
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <div className="col-span-full">
@@ -181,7 +188,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                         </div>
                     </div>
                 </div>
-                
+
                 {/* Quick Actions */}
                 <div className="grid gap-6 md:grid-cols-2">
                     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
@@ -201,7 +208,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                             </Button>
                         </div>
                     </div>
-                    
+
                     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                         <div className="flex items-center gap-2 mb-4">
                             <User className="h-5 w-5 text-primary" />

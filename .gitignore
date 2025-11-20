@@ -481,6 +481,8 @@ mediafiles/
 .agent/workflows/*
 .agent/
 
+playwright-report/
+
 # Lock files (keep uv.lock in Git!)
 # DON'T ignore uv.lock - it's needed for reproducible builds
 # package-lock.json, yarn.lock also should be committed
