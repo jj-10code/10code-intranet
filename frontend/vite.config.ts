@@ -17,11 +17,11 @@ export default defineConfig({
 
   build: {
     // Output a la carpeta que Django espera
-    outDir: '../staticfiles/dist',
+    outDir: 'dist',
     emptyOutDir: true,
 
     // Generar manifest para django-vite
-    manifest: 'manifest.json',
+    manifest: true,
 
     rollupOptions: {
       input: {
@@ -38,6 +38,7 @@ export default defineConfig({
     // HMR configuration para Docker
     hmr: {
       clientPort: 5173,
+      port: 5174, // Use different port for HMR to avoid conflicts
     },
 
     // Watch configuration
