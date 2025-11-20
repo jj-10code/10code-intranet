@@ -8,8 +8,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
-} from "@/design-system/components/ui/dropdown-menu"
-import { Separator } from "@/design-system/components/ui/separator"
+} from "@/components/ui/dropdown-menu"
+import { Separator } from "@/components/ui/separator"
 import { Home, User, LogOut, Menu } from "lucide-react"
 
 interface User {
