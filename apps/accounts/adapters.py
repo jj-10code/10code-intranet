@@ -44,7 +44,11 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         """
         email = sociallogin.account.extra_data.get("email", "")
 
-        if not email.endswith(f"@{self.ALLOWED_DOMAIN}"):
+        # Importación local para evitar circular import
+        from apps.accounts.services import AuthService
+
+        if not AuthService.validate_email_domain(email):
+            AuthService.log_failed_login(request=request, email=email)
             raise PermissionDenied(
                 f"Solo se permiten usuarios con email @{self.ALLOWED_DOMAIN}. "
                 f"Tu email '{email}' no está autorizado."
@@ -55,6 +59,7 @@ class SocialAccountAdapter(DefaultSocialAccountAdapter):
         hd = extra_data.get("hd", "")
 
         if hd != "10code.es":
+            AuthService.log_failed_login(request=request, email=email)
             raise ImmediateHttpResponse(
                 render(
                     request,

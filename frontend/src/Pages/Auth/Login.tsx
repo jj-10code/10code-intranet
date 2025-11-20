@@ -7,7 +7,8 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/design-system/components/ui/separator"
+
+import { Separator } from "@/components/ui/separator"
 import { LogIn } from "lucide-react"
 
 interface LoginProps {
@@ -33,15 +34,15 @@ export default function Login({ google_login_url, title }: LoginProps) {
                         </CardDescription>
                     </div>
                 </CardHeader>
-                
+
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
-                        <Button 
-                            className="w-full h-11 text-sm font-medium" 
+                        <Button
+                            className="w-full h-11 text-sm font-medium"
                             asChild
                             size="lg"
                         >
-                            <a 
+                            <a
                                 href={google_login_url}
                                 className="flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
                                 aria-label="Iniciar sesión con Google"
@@ -64,7 +65,7 @@ export default function Login({ google_login_url, title }: LoginProps) {
                     </div>
 
                     <div className="text-center text-xs text-muted-foreground">
-                        Al continuar, aceptas los términos de servicio y 
+                        Al continuar, aceptas los términos de servicio y
                         la política de privacidad de 10Code.
                     </div>
                 </CardContent>
