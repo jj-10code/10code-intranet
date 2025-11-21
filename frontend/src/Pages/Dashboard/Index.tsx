@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
 import { Home, User, LogOut, Menu } from "lucide-react"
+import logoBlack from "../../assets/logo_black.webp"
 
 interface User {
     id: number
@@ -47,9 +48,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
 
                     {/* Logo and title */}
                     <div className="mr-4 flex items-center space-x-2">
-                        <div className="flex items-center justify-center w-8 h-8 bg-primary rounded-md">
-                            <span className="text-primary-foreground text-sm font-bold">10</span>
-                        </div>
+                        <img src={logoBlack} alt="10Code Logo" className="h-8 w-auto object-contain" />
                         <span className="hidden font-bold sm:inline-block text-xl">
                             10Code
                         </span>

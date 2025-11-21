@@ -40,6 +40,7 @@ export default defineConfig({
       clientPort: 5173,
       port: 5174, // Use different port for HMR to avoid conflicts
     },
+    origin: 'http://localhost:5173',
 
     // Watch configuration
     watch: {
