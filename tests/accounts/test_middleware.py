@@ -27,7 +27,8 @@ class TestActivityTrackingMiddleware:
         request.session.save()
         
         # Setup user
-        user = User.objects.create_user(username='testuser', email='test@example.com', password='password')
+        # Setup user
+        user = User.objects.create_user(email='test@example.com', password='password')
         request.user = user
         
         # Run middleware

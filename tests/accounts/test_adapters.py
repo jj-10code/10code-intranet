@@ -21,6 +21,7 @@ class TestSocialAccountAdapter:
     def test_pre_social_login_invalid_domain(self):
         adapter = SocialAccountAdapter()
         request = Mock()
+        request.META = {"HTTP_X_FORWARDED_FOR": "127.0.0.1"}
         sociallogin = Mock(spec=SocialLogin)
         sociallogin.account = Mock(spec=SocialAccount)
         sociallogin.account.extra_data = {"email": "test@gmail.com"}
@@ -40,18 +41,6 @@ class TestSocialAccountAdapter:
         }
         sociallogin.user = UserFactory.build()
         
-        user = UserFactory.build() # Not saved
-        # Mock super().populate_user behavior
-        user.username = "john" 
-        
-        # We need to mock super().populate_user call, but since we can't easily mock super() in this context without complex patching,
-        # we will assume the method modifies the user object passed or returned.
-        # Actually, populate_user returns the user.
-        
-        # Let's just test the logic inside populate_user by calling it.
-        # We need to patch super() or just instantiate the adapter and call it.
-        # Since it inherits from DefaultSocialAccountAdapter, we can rely on it.
-        
         user = adapter.populate_user(request, sociallogin, {})
         
         assert user.first_name == "John"
@@ -68,16 +57,11 @@ class TestSocialAccountAdapter:
             "sub": "12345",
             "email": "test@10code.es"
         }
-        sociallogin.user = UserFactory.build()
+        # Use create to have a saved user, as sociallogin.save() is mocked
+        sociallogin.user = UserFactory()
         
-        user = UserFactory()
-        # Mock super().save_user to return the user
-        # We can't easily mock super() here. 
-        # Instead, we can check if GoogleProfile is created after save_user is called.
-        # But save_user calls super().save_user which saves the user.
-        
-        # To properly test this without mocking super, we can just call it.
-        # DefaultSocialAccountAdapter.save_user saves the user.
+        # Mock save to do nothing (user already saved)
+        sociallogin.save = Mock()
         
         saved_user = adapter.save_user(request, sociallogin, form=None)
         

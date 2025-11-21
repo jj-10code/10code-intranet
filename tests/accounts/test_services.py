@@ -64,3 +64,35 @@ class TestAuthService:
     ])
     def test_validate_email_domain(self, email, expected):
         assert AuthService.validate_email_domain(email) == expected
+
+@pytest.mark.django_db
+class TestUserService:
+    def test_update_user_profile(self, user_factory):
+        user = user_factory()
+        
+        from apps.accounts.services import UserService
+        UserService.update_user_profile(
+            user=user,
+            first_name="NewName",
+            last_name="NewLast",
+            avatar_url="http://new.url/avatar.jpg"
+        )
+        
+        user.refresh_from_db()
+        assert user.first_name == "NewName"
+        assert user.last_name == "NewLast"
+        assert user.avatar_url == "http://new.url/avatar.jpg"
+
+    def test_deactivate_user(self, user_factory):
+        user = user_factory(is_active=True)
+        admin = user_factory(is_staff=True)
+        
+        from apps.accounts.services import UserService
+        UserService.deactivate_user(user=user, deactivated_by=admin)
+        
+        user.refresh_from_db()
+        assert user.is_active is False
+        assert AuditLog.objects.filter(
+            action=AuditLog.Action.USER_DEACTIVATED,
+            resource_id=user.id
+        ).exists()

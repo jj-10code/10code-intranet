@@ -6,9 +6,11 @@ from tests.factories import UserFactory, GoogleProfileFactory, RoleFactory
 class TestViews:
     def test_login_view_unauthenticated(self, client):
         url = reverse("login")
-        response = client.get(url)
+        response = client.get(url, **{'HTTP_X_INERTIA': 'true', 'HTTP_X_INERTIA_VERSION': '1.0'})
         assert response.status_code == 200
-        assert "Auth/Login" in response.context["page_component"]
+        data = response.json()
+        assert data["component"] == "Auth/Login"
+        assert "google_login_url" in data["props"]
 
     def test_login_view_authenticated(self, client):
         user = UserFactory()
@@ -22,19 +24,20 @@ class TestViews:
         user = UserFactory()
         client.force_login(user)
         url = reverse("dashboard")
-        response = client.get(url)
+        response = client.get(url, **{'HTTP_X_INERTIA': 'true', 'HTTP_X_INERTIA_VERSION': '1.0'})
         assert response.status_code == 200
-        assert "Dashboard/Index" in response.context["page_component"]
-        props = response.context["page_props"]
-        assert props["user"]["email"] == user.email
+        data = response.json()
+        assert data["component"] == "Dashboard/Index"
+        assert data["props"]["user"]["email"] == user.email
 
     def test_profile_view(self, client):
         user = UserFactory()
         GoogleProfileFactory(user=user)
         client.force_login(user)
         url = reverse("profile")
-        response = client.get(url)
+        response = client.get(url, **{'HTTP_X_INERTIA': 'true', 'HTTP_X_INERTIA_VERSION': '1.0'})
         assert response.status_code == 200
-        assert "Profile/Show" in response.context["page_component"]
-        props = response.context["page_props"]
-        assert props["user"]["email"] == user.email
+        data = response.json()
+        assert data["component"] == "Profile/Show"
+        assert data["props"]["user"]["email"] == user.email
+
