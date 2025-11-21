@@ -10,6 +10,7 @@ import {
 
 import { Separator } from "@/components/ui/separator"
 import { LogIn } from "lucide-react"
+import logoBlack from "../../assets/logo_black.webp"
 
 interface LoginProps {
     google_login_url: string
@@ -22,9 +23,7 @@ export default function Login({ google_login_url, title }: LoginProps) {
             <Head title={title} />
             <Card className="w-full max-w-md shadow-lg">
                 <CardHeader className="space-y-4 text-center">
-                    <div className="mx-auto w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-                        <span className="text-primary-foreground text-xl font-bold">10</span>
-                    </div>
+                    <img src={logoBlack} alt="10Code Logo" className="mx-auto h-12 w-auto object-contain" />
                     <div className="space-y-2">
                         <CardTitle className="text-2xl font-bold tracking-tight">
                             Bienvenido a 10Code
