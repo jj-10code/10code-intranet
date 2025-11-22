@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react"
+import { Head, router } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -18,6 +18,10 @@ interface LoginProps {
 }
 
 export default function Login({ google_login_url, title }: LoginProps) {
+    const handleGoogleLogin = () => {
+        router.post(google_login_url)
+    }
+
     return (
         <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
             <Head title={title} />
@@ -37,18 +41,13 @@ export default function Login({ google_login_url, title }: LoginProps) {
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
                         <Button
-                            className="w-full h-11 text-sm font-medium"
-                            asChild
+                            className="w-full h-11 text-sm font-medium flex items-center justify-center gap-3"
                             size="lg"
+                            onClick={handleGoogleLogin}
+                            aria-label="Iniciar sesión con Google"
                         >
-                            <a
-                                href={google_login_url}
-                                className="flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
-                                aria-label="Iniciar sesión con Google"
-                            >
-                                <LogIn className="h-5 w-5" />
-                                Continuar con Google
-                            </a>
+                            <LogIn className="h-5 w-5" />
+                            Continuar con Google
                         </Button>
                     </div>
 
