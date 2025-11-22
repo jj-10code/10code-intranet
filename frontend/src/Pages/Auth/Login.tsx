@@ -38,12 +38,12 @@ export default function Login({ google_login_url, title }: LoginProps) {
                     <div className="space-y-4">
                         <Button
                             className="w-full h-11 text-sm font-medium"
-                            asChild
                             size="lg"
+                            asChild
                         >
                             <a
                                 href={google_login_url}
-                                className="flex items-center justify-center gap-3 hover:bg-primary/90 transition-colors"
+                                className="flex items-center justify-center gap-3"
                                 aria-label="Iniciar sesión con Google"
                             >
                                 <LogIn className="h-5 w-5" />
