@@ -208,7 +208,7 @@ SOCIALACCOUNT_EMAIL_VERIFICATION = "none"  # Google ya verifica
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Confía en emails verificados por Google
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
-SOCIALACCOUNT_LOGIN_ON_GET = False  # Seguridad: evita login en GET
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Permitir inicio directo en GET (OAuth tiene sus propias protecciones CSRF)
 SOCIALACCOUNT_ADAPTER = "apps.accounts.adapters.SocialAccountAdapter"  # Custom adapter
 
 # Configuración del proveedor Google
@@ -230,6 +230,16 @@ SOCIALACCOUNT_PROVIDERS = {
 # URLs de redirección después de login/logout
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
+
+# ========================================
+# CSRF CONFIGURATION
+# ========================================
+
+# Configurar Django para aceptar el header que Axios usa por defecto
+# Axios busca cookie XSRF-TOKEN y envía header X-XSRF-Token
+# Django por defecto espera HTTP_X_CSRFTOKEN, lo cambiamos a HTTP_X_XSRF_TOKEN
+CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
+CSRF_COOKIE_NAME = "XSRF-TOKEN"
 
 # ========================================
 # INERTIA.JS CONFIGURATION

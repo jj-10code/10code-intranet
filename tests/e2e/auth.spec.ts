@@ -184,8 +184,8 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
 
         // Check button accessibility
         const button = page.getByRole('link', { name: 'Continuar con Google' });
-        await expect(button).toHaveAttribute('role', 'link');
-        await expect(button).toHaveAttribute('href');
+        await expect(button).toBeVisible();
+        await expect(button).toHaveAttribute('href', '/accounts/google/login/');
 
         // Check focus indicators
         await page.keyboard.press('Tab');
