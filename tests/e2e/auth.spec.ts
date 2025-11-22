@@ -16,8 +16,9 @@ test.describe('Authentication Flow', () => {
         await expect(brandLogo).toContainText('10');
 
         // Check Google authentication button
-        const loginButton = page.getByRole('button', { name: 'Continuar con Google' });
+        const loginButton = page.getByRole('link', { name: 'Continuar con Google' });
         await expect(loginButton).toBeVisible();
+        await expect(loginButton).toHaveAttribute('href', '/accounts/google/login/');
         await expect(loginButton).toContainText('Continuar con Google');
 
         // Verify accessibility attributes
@@ -35,7 +36,7 @@ test.describe('Authentication Flow', () => {
 
         // Test keyboard navigation
         await page.keyboard.press('Tab');
-        const loginButton = page.getByRole('button', { name: 'Continuar con Google' });
+        const loginButton = page.getByRole('link', { name: 'Continuar con Google' });
         await expect(loginButton).toBeFocused();
 
         // Check if button is visible and clickable
@@ -182,8 +183,9 @@ test.describe('Accessibility (WCAG 2.1 AA)', () => {
         expect(headingCount).toBeGreaterThan(0);
 
         // Check button accessibility
-        const button = page.getByRole('button', { name: 'Continuar con Google' });
+        const button = page.getByRole('link', { name: 'Continuar con Google' });
         await expect(button).toBeVisible();
+        await expect(button).toHaveAttribute('href', '/accounts/google/login/');
 
         // Check focus indicators
         await page.keyboard.press('Tab');
@@ -235,7 +237,7 @@ test.describe('Cross-browser Compatibility', () => {
 
         // Basic functionality checks
         await expect(page.getByText('Bienvenido a 10Code')).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Continuar con Google' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Continuar con Google' })).toBeVisible();
 
         // Check CSS Grid/Flexbox support
         const card = page.locator('.shadow-lg').first();
@@ -277,7 +279,7 @@ test.describe('Authentication State Management', () => {
 
         // Should show login page
         await expect(page.getByText('Bienvenido a 10Code')).toBeVisible();
-        await expect(page.getByRole('button', { name: 'Continuar con Google' })).toBeVisible();
+        await expect(page.getByRole('link', { name: 'Continuar con Google' })).toBeVisible();
     });
 
     test('authenticated users redirected from login', async ({ page }) => {
