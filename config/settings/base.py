@@ -232,6 +232,16 @@ LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
 
 # ========================================
+# CSRF CONFIGURATION
+# ========================================
+
+# Configurar Django para aceptar el header que Axios usa por defecto
+# Axios busca cookie XSRF-TOKEN y envía header X-XSRF-Token
+# Django por defecto espera HTTP_X_CSRFTOKEN, lo cambiamos a HTTP_X_XSRF_TOKEN
+CSRF_HEADER_NAME = "HTTP_X_XSRF_TOKEN"
+CSRF_COOKIE_NAME = "XSRF-TOKEN"
+
+# ========================================
 # INERTIA.JS CONFIGURATION
 # ========================================
 
