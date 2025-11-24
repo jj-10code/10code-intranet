@@ -228,6 +228,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 # URLs de redirección después de login/logout
+LOGIN_URL = "/login/"  # Redirige usuarios no autenticados aquí
 LOGIN_REDIRECT_URL = "/dashboard/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/login/"
 
