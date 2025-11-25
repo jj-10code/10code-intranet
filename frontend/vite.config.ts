@@ -36,6 +36,9 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
 
+    // CORS configuration for Django integration
+    cors: { origin: '*' },
+
     // HMR configuration para Docker
     hmr: {
       clientPort: 5173,
