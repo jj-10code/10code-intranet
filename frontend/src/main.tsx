@@ -2,6 +2,14 @@ import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
 import './styles/globals.css'
 
+// Check font loading
+// document.fonts.ready.then(() => {
+//   console.log('Fonts loaded:', document.fonts.check('12px "Geist"'), document.fonts.check('12px "Geist Mono"'), document.fonts.check('12px "Space Grotesk"'));
+//   console.log('Body font-family:', getComputedStyle(document.body).fontFamily);
+//   console.log('HTML font-family:', getComputedStyle(document.documentElement).fontFamily);
+// });
+import './styles/globals.css'
+
 // Axios (usado por Inertia) detecta automáticamente la cookie XSRF-TOKEN
 // y la envía en el header X-XSRF-Token. Django está configurado para aceptarlo.
 
