@@ -6,9 +6,22 @@ import './styles/globals.css'
 // y la envía en el header X-XSRF-Token. Django está configurado para aceptarlo.
 
 createInertiaApp({
+  id: 'app',
+  progress: {
+    color: '#4B5563',
+  },
   resolve: name => {
-    const pages = import.meta.glob('./Pages/**/*.tsx', { eager: true })
-    return pages[`./Pages/${name}.tsx`]
+    console.log('Resolving component:', name)
+    const pages = import.meta.glob('./pages/**/*.tsx', { eager: true })
+    const parts = name.split('/')
+    const path = parts.map((part, index) =>
+      index === parts.length - 1 ? part : part.toLowerCase()
+    ).join('/')
+    const fullPath = `./pages/${path}.tsx`
+    console.log('Looking for:', fullPath)
+    const module = pages[fullPath]
+    console.log('Found module:', !!module)
+    return module
   },
   setup({ el, App, props }) {
     createRoot(el).render(<App {...props} />)
