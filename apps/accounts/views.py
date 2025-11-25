@@ -5,13 +5,13 @@ Vistas thin que solo preparan props para Inertia.js (frontend React).
 La lógica de negocio está en services.py.
 """
 
+from allauth.socialaccount.models import SocialAccount
+from inertia import render
+
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
-
-from allauth.socialaccount.models import SocialAccount
-from inertia import render
 
 from apps.accounts.services import AuthService
 
@@ -30,7 +30,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "Auth/Login",
+        "auth/Login",
         props={
             "google_login_url": "/accounts/google/login/",
             "title": "Iniciar Sesión - 10Code Intranet",
@@ -77,7 +77,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "Dashboard/Index",
+        "dashboard/Index",
         props={
             "user": {
                 "id": user.id,
@@ -124,7 +124,7 @@ def profile_view(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "Profile/Show",
+        "profile/Show",
         props={
             "user": {
                 "id": user.id,
