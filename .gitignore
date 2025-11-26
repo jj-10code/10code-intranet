@@ -480,6 +480,7 @@ mediafiles/
 .kilocodemodes
 .agent/workflows/*
 .agent/
+.claude/
 
 playwright-report/
 
