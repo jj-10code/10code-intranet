@@ -1,4 +1,5 @@
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
+import { useState } from 'react'
+import { IconCirclePlusFilled, IconMail, IconChevronDown } from "@tabler/icons-react"
 
 import { Button } from '@/components/ui/button'
 import {
@@ -8,16 +9,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
+import type { MenuItem } from '@/types/layout'
 
 export function NavMain({
   items,
 }: {
-  items: {
-    title: string
-    url: string
-    icon?: Icon
-  }[]
+  items: MenuItem[]
 }) {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  const toggleItem = (title: string) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev)
+      if (next.has(title)) {
+        next.delete(title)
+      } else {
+        next.add(title)
+      }
+      return next
+    })
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -43,10 +56,45 @@ export function NavMain({
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
+              {item.items ? (
+                // Item con submenú
+                <div className="space-y-1">
+                  <SidebarMenuButton
+                    onClick={() => toggleItem(item.title)}
+                    tooltip={item.title}
+                    className="w-full"
+                  >
+                    {item.icon && <item.icon />}
+                    <span className="flex-1 text-left">{item.title}</span>
+                    <IconChevronDown
+                      className={cn(
+                        "size-4 transition-transform duration-200",
+                        expandedItems.has(item.title) && "rotate-180"
+                      )}
+                    />
+                  </SidebarMenuButton>
+
+                  {expandedItems.has(item.title) && (
+                    <div className="ml-8 space-y-1 group-data-[collapsible=icon]:hidden">
+                      {item.items.map((subItem) => (
+                        <SidebarMenuButton key={subItem.title} asChild>
+                          <a href={subItem.url}>
+                            <span>{subItem.title}</span>
+                          </a>
+                        </SidebarMenuButton>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Item simple
+                <SidebarMenuButton tooltip={item.title} asChild>
+                  <a href={item.url}>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                  </a>
+                </SidebarMenuButton>
+              )}
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
