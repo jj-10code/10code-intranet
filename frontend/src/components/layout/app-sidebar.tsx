@@ -23,7 +23,7 @@ const navigationData = {
   user: {
     name: "Usuario Demo",
     email: "usuario@10code.es",
-    avatar: "/avatars/default.jpg",
+    avatar: "/default-avatar.svg",
   },
   navMain: [
     {
