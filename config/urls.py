@@ -12,6 +12,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Autenticación con django-allauth
     path("accounts/", include("allauth.urls")),
+    # URLs de la app core (dashboard, etc.)
+    path("", include("apps.core.urls")),
     # URLs de la app accounts (login, dashboard, perfil)
     path("", include("apps.accounts.urls")),
     # Redirección raíz al login
