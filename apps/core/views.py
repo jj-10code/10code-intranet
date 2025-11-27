@@ -14,3 +14,17 @@ def dashboard_view(request):
             'email': request.user.email,
         }
     })
+
+@login_required
+def help_view(request):
+    """
+    Vista de ayuda.
+    Renderiza la página Help de React.
+    """
+    return render(request, 'Help', props={
+        'user': {
+            'name': request.user.get_full_name() or request.user.username,
+            'email': request.user.email,
+            'avatar': request.user.avatar.url if hasattr(request.user, 'avatar') and request.user.avatar else None,
+        }
+    })
