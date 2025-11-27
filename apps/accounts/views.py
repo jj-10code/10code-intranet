@@ -77,7 +77,7 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "dashboard/Index",
+        "Dashboard",
         props={
             "user": {
                 "id": user.id,
