@@ -1,4 +1,5 @@
 import * as React from "react"
+import { usePage } from '@inertiajs/react'
 import {
   IconBuilding,
   IconDashboard,
@@ -22,11 +23,6 @@ import {
 import defaultAvatar from '@/assets/default-avatar.svg'
 
 const navigationData = {
-  user: {
-    name: "Usuario Demo",
-    email: "usuario@10code.es",
-    avatar: defaultAvatar,
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -53,6 +49,8 @@ const navigationData = {
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { auth } = usePage<{ auth: { user: { id: number; name: string; email: string; avatar: string | null } } }>().props
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -76,7 +74,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavSecondary items={navigationData.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={navigationData.user} />
+        <NavUser user={{
+          name: auth.user.name,
+          email: auth.user.email,
+          avatar: auth.user.avatar || defaultAvatar,
+        }} />
       </SidebarFooter>
     </Sidebar>
   )
