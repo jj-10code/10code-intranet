@@ -30,20 +30,23 @@ export default defineConfig({
       },
     },
   },
-
   server: {
     host: '0.0.0.0',
     port: 5173,
     strictPort: true,
 
     // CORS configuration for Django integration
-    cors: true,
+    cors: {
+      origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
+      credentials: true,
+    },
 
     // HMR configuration para Docker
     hmr: {
+      host: 'localhost',
+      port: 5173,
       clientPort: 5173,
     },
-    origin: 'http://localhost:5173',
 
     // Watch configuration
     watch: {
