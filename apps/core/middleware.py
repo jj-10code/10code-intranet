@@ -15,7 +15,7 @@ class InertiaShareMiddleware:
         
         # Compartir información del usuario autenticado
         if request.user.is_authenticated:
-            share(request, 'auth', {
+            share(request, auth={
                 'user': {
                     'id': request.user.id,
                     'name': request.user.get_full_name() or request.user.username,
@@ -25,7 +25,7 @@ class InertiaShareMiddleware:
                 'permissions': []  # TODO: implementar sistema de permisos
             })
         else:
-            share(request, 'auth', {
+            share(request, auth={
                 'user': None,
                 'permissions': []
             })
