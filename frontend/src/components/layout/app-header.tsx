@@ -1,4 +1,5 @@
 import { IconActivity, IconClock } from '@tabler/icons-react'
+import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
 import {
     Breadcrumb,
@@ -24,9 +25,9 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
             <div className="flex w-full items-center gap-2 px-4">
                 {/* Izquierda: Trigger del sidebar */}
                 <SidebarTrigger className="-ml-1" />
-                <Separator 
-                    orientation="vertical" 
-                    className="mr-2 data-[orientation=vertical]:h-4" 
+                <Separator
+                    orientation="vertical"
+                    className="mr-2 data-[orientation=vertical]:h-4"
                 />
 
                 {/* Centro: Breadcrumbs dinámicos */}
@@ -40,8 +41,10 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
                                     <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden md:block" : ""}>
                                         {!isLast && crumb.href ? (
                                             <>
-                                                <BreadcrumbLink href={crumb.href}>
-                                                    {crumb.label}
+                                                <BreadcrumbLink asChild>
+                                                    <Link href={crumb.href}>
+                                                        {crumb.label}
+                                                    </Link>
                                                 </BreadcrumbLink>
                                                 <BreadcrumbSeparator className="hidden md:block" />
                                             </>

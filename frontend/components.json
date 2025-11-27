@@ -10,7 +10,8 @@
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks",
-    "assets": "@/assets"
+    "assets": "@/assets",
+    "pages": "@/pages"
   },
   "tailwind": {
     "config": "",
