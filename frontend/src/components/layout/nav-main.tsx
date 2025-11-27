@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { IconCirclePlusFilled, IconMail, IconChevronDown } from "@tabler/icons-react"
+import { usePage } from '@inertiajs/react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -17,7 +18,33 @@ export function NavMain({
 }: {
   items: MenuItem[]
 }) {
+  const { url } = usePage()
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  const isActive = (path: string): boolean => {
+    if (path === '#') return false
+    return url.startsWith(path)
+  }
+
+  useEffect(() => {
+    const itemsToExpand = items.filter(item =>
+      item.items?.some(subItem => isActive(subItem.url))
+    ).map(i => i.title)
+
+    if (itemsToExpand.length > 0) {
+      setExpandedItems(prev => {
+        const next = new Set(prev)
+        let changed = false
+        itemsToExpand.forEach(title => {
+          if (!next.has(title)) {
+            next.add(title)
+            changed = true
+          }
+        })
+        return changed ? next : prev
+      })
+    }
+  }, [url, items])
 
   const toggleItem = (title: string) => {
     setExpandedItems(prev => {
@@ -62,7 +89,10 @@ export function NavMain({
                   <SidebarMenuButton
                     onClick={() => toggleItem(item.title)}
                     tooltip={item.title}
-                    className="w-full"
+                    className={cn(
+                      "w-full",
+                      isActive(item.url) && "bg-accent text-accent-foreground"
+                    )}
                   >
                     {item.icon && <item.icon />}
                     <span className="flex-1 text-left">{item.title}</span>
@@ -77,7 +107,13 @@ export function NavMain({
                   {expandedItems.has(item.title) && (
                     <div className="ml-8 space-y-1 group-data-[collapsible=icon]:hidden">
                       {item.items.map((subItem) => (
-                        <SidebarMenuButton key={subItem.title} asChild>
+                        <SidebarMenuButton
+                          key={subItem.title}
+                          asChild
+                          className={cn(
+                            isActive(subItem.url) && "bg-accent/50 text-accent-foreground"
+                          )}
+                        >
                           <a href={subItem.url}>
                             <span>{subItem.title}</span>
                           </a>
@@ -88,7 +124,13 @@ export function NavMain({
                 </div>
               ) : (
                 // Item simple
-                <SidebarMenuButton tooltip={item.title} asChild>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  asChild
+                  className={cn(
+                    isActive(item.url) && "bg-accent text-accent-foreground"
+                  )}
+                >
                   <a href={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
