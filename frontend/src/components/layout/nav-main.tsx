@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { IconCirclePlusFilled, IconMail, IconChevronDown } from "@tabler/icons-react"
-import { usePage } from '@inertiajs/react'
+import { usePage, Link } from '@inertiajs/react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -114,9 +114,9 @@ export function NavMain({
                             isActive(subItem.url) && "bg-accent/50 text-accent-foreground"
                           )}
                         >
-                          <a href={subItem.url}>
+                          <Link href={subItem.url}>
                             <span>{subItem.title}</span>
-                          </a>
+                          </Link>
                         </SidebarMenuButton>
                       ))}
                     </div>
@@ -131,10 +131,10 @@ export function NavMain({
                     isActive(item.url) && "bg-accent text-accent-foreground"
                   )}
                 >
-                  <a href={item.url}>
+                  <Link href={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               )}
             </SidebarMenuItem>

@@ -3,6 +3,7 @@ import {
   IconLogout,
   IconUserCircle,
 } from "@tabler/icons-react"
+import { Link } from '@inertiajs/react'
 
 import {
   Avatar,
@@ -83,17 +84,17 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <a href="/profile/">
+              <Link href="/profile/">
                 <IconUserCircle />
                 Mi Perfil
-              </a>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <a href="/logout/">
+              <Link href="/logout/" method="post" as="button">
                 <IconLogout />
                 Cerrar Sesión
-              </a>
+              </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -41,10 +41,7 @@ export default defineConfig(({ mode }) => {
       origin: 'http://localhost:5173', // Force origin for asset URLs
 
       // CORS configuration for Django integration
-      cors: {
-        origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
-        credentials: true,
-      },
+      cors: true, // Allow all origins in development
 
       // HMR configuration para Docker
       hmr: {
