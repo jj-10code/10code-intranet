@@ -52,7 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = usePage<{ auth: { user: { id: number; name: string; email: string; avatar: string | null } } }>().props
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} aria-label="Navegación principal">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
