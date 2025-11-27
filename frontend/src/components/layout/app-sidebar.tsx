@@ -1,5 +1,5 @@
 import * as React from "react"
-import { usePage } from '@inertiajs/react'
+import { usePage, Link } from '@inertiajs/react'
 import {
   IconBuilding,
   IconDashboard,
@@ -60,10 +60,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <Link href="/dashboard/">
                 <IconBuilding className="!size-5" />
-                <span className="text-base font-semibold">10Code</span>
-              </a>
+                <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
+                  10Code
+                </span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
