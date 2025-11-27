@@ -20,27 +20,30 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
     const hasBreadcrumbs = breadcrumbs && breadcrumbs.length > 0
 
     return (
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
-            <div className="flex w-full items-center gap-2 px-4 lg:px-6">
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+            <div className="flex w-full items-center gap-2 px-4">
                 {/* Izquierda: Trigger del sidebar */}
                 <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mx-2 h-4" />
+                <Separator 
+                    orientation="vertical" 
+                    className="mr-2 data-[orientation=vertical]:h-4" 
+                />
 
                 {/* Centro: Breadcrumbs dinámicos */}
                 {hasBreadcrumbs && (
-                    <Breadcrumb className="flex-1 hidden sm:block">
+                    <Breadcrumb className="flex-1">
                         <BreadcrumbList>
                             {breadcrumbs.map((crumb, index) => {
                                 const isLast = index === breadcrumbs.length - 1
 
                                 return (
-                                    <BreadcrumbItem key={`${crumb.label}-${index}`}>
+                                    <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden md:block" : ""}>
                                         {!isLast && crumb.href ? (
                                             <>
                                                 <BreadcrumbLink href={crumb.href}>
                                                     {crumb.label}
                                                 </BreadcrumbLink>
-                                                <BreadcrumbSeparator />
+                                                <BreadcrumbSeparator className="hidden md:block" />
                                             </>
                                         ) : (
                                             <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
