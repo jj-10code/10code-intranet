@@ -19,11 +19,13 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
 
+import defaultAvatar from '@/assets/default-avatar.svg'
+
 const navigationData = {
   user: {
     name: "Usuario Demo",
     email: "usuario@10code.es",
-    avatar: "/default-avatar.svg",
+    avatar: defaultAvatar,
   },
   navMain: [
     {

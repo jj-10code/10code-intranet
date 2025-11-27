@@ -1,5 +1,8 @@
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
+import '@fontsource/geist-sans/index.css'
+import '@fontsource/geist-mono/index.css'
+import '@fontsource/space-grotesk/index.css'
 import './styles/globals.css'
 
 // Axios (usado por Inertia) detecta automáticamente la cookie XSRF-TOKEN
