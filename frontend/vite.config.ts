@@ -4,50 +4,59 @@ import tailwindcss from "@tailwindcss/vite"
 import path from 'path'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
+export default defineConfig(({ mode }) => {
+  const base = mode === 'development' ? 'http://localhost:5173/static/' : '/static/'
+  console.log(`[Vite] Mode: ${mode}, Base: ${base}`)
 
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+  return {
+    plugins: [react(), tailwindcss()],
 
-  // Configuración para django-vite
-  base: '/static/',
-
-  build: {
-    // Output a la carpeta que Django espera
-    outDir: 'dist',
-    emptyOutDir: true,
-
-    // Generar manifest para django-vite
-    manifest: true,
-
-    rollupOptions: {
-      input: {
-        main: path.resolve(__dirname, 'src/main.tsx'),
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
 
-  server: {
-    host: '0.0.0.0',
-    port: 5173,
-    strictPort: true,
+    // Configuración para django-vite
+    base,
 
-    // CORS configuration for Django integration
-    cors: true,
+    build: {
+      // Output a la carpeta que Django espera
+      outDir: 'dist',
+      emptyOutDir: true,
 
-    // HMR configuration para Docker
-    hmr: {
-      clientPort: 5173,
+      // Generar manifest para django-vite
+      manifest: true,
+
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'src/main.tsx'),
+        },
+      },
     },
-    origin: 'http://localhost:5173',
+    server: {
+      host: '0.0.0.0',
+      port: 5173,
+      strictPort: true,
+      origin: 'http://localhost:5173', // Force origin for asset URLs
 
-    // Watch configuration
-    watch: {
-      usePolling: true,
+      // CORS configuration for Django integration
+      cors: {
+        origin: ['http://localhost:8000', 'http://127.0.0.1:8000'],
+        credentials: true,
+      },
+
+      // HMR configuration para Docker
+      hmr: {
+        host: 'localhost',
+        port: 5173,
+        clientPort: 5173,
+      },
+
+      // Watch configuration
+      watch: {
+        usePolling: true,
+      },
     },
-  },
+  }
 })
