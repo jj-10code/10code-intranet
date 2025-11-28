@@ -1,17 +1,40 @@
-# Frontend E2E Testing with Playwright
+# Frontend Testing
 
-This directory contains end-to-end tests for the 10Code Intranet frontend.
+This directory contains all frontend tests for the 10Code Intranet.
+
+## Test Frameworks
+
+- **Vitest**: Unit and component tests
+- **Playwright**: End-to-end (E2E) tests
 
 ## Structure
 
 ```
 tests/
-├── e2e/           # End-to-end tests
-├── components/    # Component tests (future)
-└── fixtures/      # Test fixtures and helpers
+├── e2e/              # End-to-end tests (Playwright)
+├── components/       # Component tests (Vitest - future)
+├── fixtures/         # Test fixtures and helpers
+├── setup.ts          # Vitest setup and mocks
+├── *.test.ts         # Vitest unit tests
+└── README.md
 ```
 
 ## Running Tests
+
+### Unit/Component Tests (Vitest)
+
+```bash
+# Run unit tests in watch mode
+pnpm test
+
+# Run tests with UI
+pnpm test:ui
+
+# Run tests with coverage
+pnpm test:coverage
+```
+
+### E2E Tests (Playwright)
 
 ```bash
 # Run all E2E tests
