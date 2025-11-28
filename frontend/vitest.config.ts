@@ -18,6 +18,9 @@ export default defineConfig({
             'playwright-report/',
             'playwright.config.ts',
         ],
+        typecheck: {
+            tsconfig: './tsconfig.test.json',
+        },
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
