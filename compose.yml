@@ -138,6 +138,31 @@ services:
       - backend
     restart: unless-stopped
 
+  # ============================================================================
+  # Frontend Test Service - E2E Tests with Playwright
+  # ============================================================================
+  frontend-test:
+    build:
+      context: .
+      target: test
+    container_name: 10code_frontend_test
+    volumes:
+      - ./frontend:/app/frontend
+    environment:
+      - CI=true
+      - PLAYWRIGHT_TEST_BASE_URL=http://web:8000
+      - NODE_ENV=test
+    depends_on:
+      web:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+    profiles:
+      - test
+    command: sh -c "pnpm playwright install --with-deps chromium && pnpm test:e2e"
+
 # ============================================================================
 # VOLUMES - Persistencia de Datos
 # ============================================================================
