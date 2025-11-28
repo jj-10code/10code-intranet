@@ -1,6 +1,7 @@
 import * as React from "react"
 import defaultAvatar from '@/assets/default-avatar.svg'
 import { usePage, Link } from '@inertiajs/react'
+import { useEffect } from "react"
 import {
   IconDashboard,
   IconHelp,
@@ -18,6 +19,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
 import Logo10Code from '@/assets/logo_10code.webp'
@@ -50,6 +52,15 @@ const navigationData = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = usePage<{ auth: { user: { id: number; name: string; email: string; avatar: string | null } } }>().props
+  const { setOpenMobile, isMobile } = useSidebar()
+  const { url } = usePage()
+
+  // Cerrar sidebar móvil al navegar
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }, [url, isMobile, setOpenMobile])
 
   return (
     <Sidebar collapsible="icon" {...props} aria-label="Navegación principal">
