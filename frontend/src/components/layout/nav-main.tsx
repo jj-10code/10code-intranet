@@ -9,7 +9,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import type { MenuItem } from '@/types/layout'
 
@@ -19,6 +26,7 @@ export function NavMain({
   items: MenuItem[]
 }) {
   const { url } = usePage()
+  const { state, setOpen } = useSidebar()
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
 
   const isActive = (path: string): boolean => {
@@ -27,6 +35,11 @@ export function NavMain({
   }
 
   useEffect(() => {
+    const isActive = (path: string): boolean => {
+      if (path === '#') return false
+      return url.startsWith(path)
+    }
+
     const itemsToExpand = items.filter(item =>
       item.items?.some(subItem => isActive(subItem.url))
     ).map(i => i.title)
@@ -58,6 +71,16 @@ export function NavMain({
     })
   }
 
+  const handleItemClick = (item: MenuItem) => {
+    // If sidebar is collapsed and item has children, expand the sidebar
+    if (state === "collapsed" && item.items) {
+      setOpen(true)
+    } else {
+      // Normal behavior - toggle expanded state
+      toggleItem(item.title)
+    }
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
@@ -85,43 +108,78 @@ export function NavMain({
             <SidebarMenuItem key={item.title}>
               {item.items ? (
                 // Item con submenú
-                <div className="space-y-1">
-                  <SidebarMenuButton
-                    onClick={() => toggleItem(item.title)}
-                    tooltip={item.title}
-                    className={cn(
-                      "w-full",
-                      isActive(item.url) && "bg-accent text-accent-foreground"
-                    )}
-                  >
-                    {item.icon && <item.icon />}
-                    <span className="flex-1 text-left">{item.title}</span>
-                    <IconChevronDown
-                      className={cn(
-                        "size-4 transition-transform duration-200",
-                        expandedItems.has(item.title) && "rotate-180"
-                      )}
-                    />
-                  </SidebarMenuButton>
-
-                  {expandedItems.has(item.title) && (
-                    <div className="ml-8 space-y-1 group-data-[collapsible=icon]:hidden">
+                state === "collapsed" ? (
+                  // When collapsed, show dropdown menu
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip={item.title}
+                        className={cn(
+                          "w-full relative",
+                          (isActive(item.url) || item.items?.some(subItem => isActive(subItem.url))) && "bg-accent text-accent-foreground"
+                        )}
+                      >
+                        {item.icon && <item.icon />}
+                        <span className="flex-1 text-left">{item.title}</span>
+                        <IconChevronDown className="size-3 opacity-50" />
+                        <span data-testid="collapsed-indicator" className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" />
+                      </SidebarMenuButton>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent side="right" align="start" sideOffset={4}>
                       {item.items.map((subItem) => (
-                        <SidebarMenuButton
-                          key={subItem.title}
-                          asChild
-                          className={cn(
-                            isActive(subItem.url) && "bg-accent/50 text-accent-foreground"
-                          )}
-                        >
-                          <Link href={subItem.url}>
-                            <span>{subItem.title}</span>
+                        <DropdownMenuItem key={subItem.title} asChild>
+                          <Link href={subItem.url} className={cn(
+                            isActive(subItem.url) && "bg-accent text-accent-foreground"
+                          )}>
+                            {subItem.title}
                           </Link>
-                        </SidebarMenuButton>
+                        </DropdownMenuItem>
                       ))}
-                    </div>
-                  )}
-                </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  // When expanded, show normal collapsible menu
+                  <div className="space-y-1">
+                    <SidebarMenuButton
+                      onClick={() => handleItemClick(item)}
+                      tooltip={item.title}
+                      className={cn(
+                        "w-full",
+                        isActive(item.url) && "bg-accent text-accent-foreground"
+                      )}
+                    >
+                      {item.icon && <item.icon />}
+                      <span className="flex-1 text-left">{item.title}</span>
+                      <div className="flex items-center gap-1">
+                        <IconChevronDown
+                          className={cn(
+                            "size-4 transition-transform duration-200",
+                            expandedItems.has(item.title) && "rotate-180"
+                          )}
+                        />
+                      </div>
+                    </SidebarMenuButton>
+
+                    {expandedItems.has(item.title) && (
+                      <div className="ml-8 space-y-1">
+                        {item.items.map((subItem) => (
+                          <SidebarMenuButton
+                            key={subItem.title}
+                            asChild
+                            tooltip={subItem.title}
+                            className={cn(
+                              isActive(subItem.url) && "bg-accent/50 text-accent-foreground"
+                            )}
+                          >
+                            <Link href={subItem.url}>
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
               ) : (
                 // Item simple
                 <SidebarMenuButton

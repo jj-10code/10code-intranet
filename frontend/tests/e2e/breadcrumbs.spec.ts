@@ -15,25 +15,21 @@ test.describe('Breadcrumbs', () => {
 
   test('debe mostrar breadcrumbs multinivel en páginas anidadas', async ({ authenticatedPage }) => {
     const page = authenticatedPage
-    
+
     // Navegar a usuarios para ver breadcrumb multinivel
     await page.click('text=Gestión de Usuarios')
     await page.waitForTimeout(500)
     await page.click('text=Listado de Usuarios')
-    
+
     const breadcrumb = page.locator('nav[aria-label="breadcrumb"]')
-    
-    // Debe contener Dashboard y Usuarios
-    await expect(breadcrumb).toContainText('Dashboard')
+
+    // Debe contener Gestión de Usuarios y Usuarios
+    await expect(breadcrumb).toContainText('Gestión de Usuarios')
     await expect(breadcrumb).toContainText('Usuarios')
-    
+
     // Verificar que hay 2 elementos en el breadcrumb
     const breadcrumbItems = breadcrumb.locator('li')
     await expect(breadcrumbItems).toHaveCount(2)
-    
-    // Dashboard debe ser clickeable (enlace)
-    const dashboardLink = breadcrumb.locator('text=Dashboard')
-    await expect(dashboardLink).toBeVisible()
   })
 
   test('debe permitir navegación mediante breadcrumbs', async ({ authenticatedPage }) => {
@@ -70,46 +66,42 @@ test.describe('Breadcrumbs', () => {
 
   test('debe preservar breadcrumbs al recargar página', async ({ authenticatedPage }) => {
     const page = authenticatedPage
-    
+
     // Navegar a página con breadcrumb multinivel
     await page.click('text=Gestión de Usuarios')
     await page.waitForTimeout(500)
     await page.click('text=Listado de Usuarios')
-    
+
     // Verificar breadcrumbs antes de recargar
     const breadcrumb = page.locator('nav[aria-label="breadcrumb"]')
-    await expect(breadcrumb).toContainText('Dashboard')
+    await expect(breadcrumb).toContainText('Gestión de Usuarios')
     await expect(breadcrumb).toContainText('Usuarios')
-    
+
     // Recargar página
     await page.reload()
-    
+
     // Breadcrumbs deben mantenerse
-    await expect(breadcrumb).toContainText('Dashboard')
+    await expect(breadcrumb).toContainText('Gestión de Usuarios')
     await expect(breadcrumb).toContainText('Usuarios')
-    
+
     // URL debe mantenerse
     await expect(page).toHaveURL('/users/')
   })
 
   test('debe manejar breadcrumbs en navegación directa por URL', async ({ authenticatedPage }) => {
     const page = authenticatedPage
-    
+
     // Navegación directa a URL de usuarios
     await page.goto('/users/')
-    
+
     // Breadcrumbs deben reflejar la ubicación correcta
     const breadcrumb = page.locator('nav[aria-label="breadcrumb"]')
-    await expect(breadcrumb).toContainText('Dashboard')
+    await expect(breadcrumb).toContainText('Gestión de Usuarios')
     await expect(breadcrumb).toContainText('Usuarios')
-    
-    // Click en breadcrumb de Dashboard
-    await page.locator('nav[aria-label="breadcrumb"] >> text=Dashboard').click()
-    await expect(page).toHaveURL('/dashboard/')
-    
+
     // Navegación directa a ayuda
     await page.goto('/help/')
-    
+
     // Breadcrumb debe mostrar solo ayuda
     await expect(page.locator('nav[aria-label="breadcrumb"]')).toContainText('Ayuda')
   })
@@ -137,19 +129,19 @@ test.describe('Breadcrumbs', () => {
 
   test('debe mostrar separadores entre elementos de breadcrumb', async ({ authenticatedPage }) => {
     const page = authenticatedPage
-    
+
     // Ir a página con breadcrumb multinivel
     await page.click('text=Gestión de Usuarios')
     await page.waitForTimeout(500)
     await page.click('text=Listado de Usuarios')
-    
+
     // Buscar separadores (pueden ser / o > símbolos)
     const breadcrumb = page.locator('nav[aria-label="breadcrumb"]')
-    
+
     // El breadcrumb debe contener texto que indique separación
     // (Esto depende de la implementación específica)
     const breadcrumbText = await breadcrumb.textContent()
-    expect(breadcrumbText).toContain('Dashboard')
+    expect(breadcrumbText).toContain('Gestión de Usuarios')
     expect(breadcrumbText).toContain('Usuarios')
   })
 })

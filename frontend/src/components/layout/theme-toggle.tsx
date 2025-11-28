@@ -1,4 +1,4 @@
-import { IconMoon, IconSun } from '@tabler/icons-react'
+import { IconMoon, IconSun, IconCheck } from '@tabler/icons-react'
 import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
@@ -10,7 +10,7 @@ import { SidebarMenuButton, useSidebar } from '@/components/ui/sidebar'
 import { useTheme } from '@/hooks/use-theme'
 
 export function ThemeToggle({ asSidebarItem }: { asSidebarItem?: boolean }) {
-    const { setTheme } = useTheme()
+    const { theme, setTheme } = useTheme()
     const { isMobile } = useSidebar()
 
     if (asSidebarItem) {
@@ -29,12 +29,15 @@ export function ThemeToggle({ asSidebarItem }: { asSidebarItem?: boolean }) {
                     sideOffset={4}
                 >
                     <DropdownMenuItem onClick={() => setTheme('light')}>
+                        <IconCheck className={`mr-2 size-4 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`} />
                         Claro
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme('dark')}>
+                        <IconCheck className={`mr-2 size-4 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`} />
                         Oscuro
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTheme('system')}>
+                        <IconCheck className={`mr-2 size-4 ${theme === 'system' ? 'opacity-100' : 'opacity-0'}`} />
                         Sistema
                     </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -53,12 +56,15 @@ export function ThemeToggle({ asSidebarItem }: { asSidebarItem?: boolean }) {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme('light')}>
+                    <IconCheck className={`mr-2 size-4 ${theme === 'light' ? 'opacity-100' : 'opacity-0'}`} />
                     Claro
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme('dark')}>
+                    <IconCheck className={`mr-2 size-4 ${theme === 'dark' ? 'opacity-100' : 'opacity-0'}`} />
                     Oscuro
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTheme('system')}>
+                    <IconCheck className={`mr-2 size-4 ${theme === 'system' ? 'opacity-100' : 'opacity-0'}`} />
                     Sistema
                 </DropdownMenuItem>
             </DropdownMenuContent>
