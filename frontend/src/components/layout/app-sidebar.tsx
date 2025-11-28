@@ -11,6 +11,7 @@ import {
 import { NavMain } from './nav-main'
 import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
+import { ThemeToggle } from './theme-toggle'
 import {
   Sidebar,
   SidebarContent,
@@ -84,7 +85,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navigationData.navMain} />
 
-        <NavSecondary items={navigationData.navSecondary} className="mt-auto" />
+        <NavSecondary items={navigationData.navSecondary} className="mt-auto">
+          <SidebarMenuItem>
+            <ThemeToggle asSidebarItem />
+          </SidebarMenuItem>
+        </NavSecondary>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={{
