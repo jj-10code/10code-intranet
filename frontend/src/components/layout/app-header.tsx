@@ -38,7 +38,7 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
                                 const isLast = index === breadcrumbs.length - 1
 
                                 return (
-                                    <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden md:block" : ""}>
+                                    <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden sm:block" : ""}>
                                         {!isLast && crumb.href ? (
                                             <>
                                                 <BreadcrumbLink asChild>
@@ -46,7 +46,7 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
                                                         {crumb.label}
                                                     </Link>
                                                 </BreadcrumbLink>
-                                                <BreadcrumbSeparator className="hidden md:block" />
+                                                <BreadcrumbSeparator className="hidden sm:block" />
                                             </>
                                         ) : (
                                             <BreadcrumbPage>{crumb.label}</BreadcrumbPage>

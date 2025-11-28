@@ -22,13 +22,12 @@ export function AppLayout({
                 <AppSidebar />
                 <SidebarInset>
                     <AppHeader breadcrumbs={breadcrumbs} />
-                    <div
+                    <main
                         id="main-content"
-                        role="main"
-                        className="flex flex-1 flex-col gap-4 p-4 pt-0 @container/main"
+                        className="flex flex-1 flex-col gap-4 p-4 pt-0 w-full overflow-x-hidden @container/main"
                     >
                         {children}
-                    </div>
+                    </main>
                 </SidebarInset>
             </SidebarProvider>
         </>
