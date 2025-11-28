@@ -12,9 +12,11 @@ import type { MenuItem } from '@/types/layout'
 
 export function NavSecondary({
   items,
+  children,
   ...props
 }: {
   items: MenuItem[]
+  children?: React.ReactNode
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
@@ -30,6 +32,7 @@ export function NavSecondary({
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
+          {children}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
