@@ -15,7 +15,7 @@ export default function UsersIndex({ users }: UsersProps) {
         <AppLayout
             title="Usuarios"
             breadcrumbs={[
-                { label: "Dashboard", href: "/dashboard/" },
+                { label: "Gestión de Usuarios", href: "#" },
                 { label: "Usuarios" }
             ]}
         >

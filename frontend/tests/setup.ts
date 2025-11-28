@@ -23,7 +23,7 @@ vi.mock('@inertiajs/react', () => ({
         },
         url: '/dashboard/',
     })),
-    Link: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => 
+    Link: ({ children, ...props }: { children: React.ReactNode;[key: string]: unknown }) =>
         React.createElement('a', props, children),
     Head: ({ title }: { title?: string }) => React.createElement('title', {}, title),
     router: {
@@ -89,7 +89,7 @@ vi.mock('@/components/layout/app-header', () => ({
 vi.mock('@/components/ui/dropdown-menu', () => ({
     DropdownMenu: ({ children }: { children: React.ReactNode }) => children,
     DropdownMenuContent: ({ children }: { children: React.ReactNode }) => children,
-    DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => 
+    DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) =>
         React.createElement('div', { onClick, role: 'menuitem', tabIndex: -1 }, children),
     DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => children,
 }))
@@ -102,4 +102,5 @@ vi.mock('@tabler/icons-react', () => ({
     IconUsers: () => React.createElement('svg', { 'data-testid': 'icon-users' }),
     IconCirclePlusFilled: () => React.createElement('svg', { 'data-testid': 'icon-circle-plus' }),
     IconMail: () => React.createElement('svg', { 'data-testid': 'icon-mail' }),
+    IconHelp: () => React.createElement('svg', { 'data-testid': 'icon-help' }),
 }))
