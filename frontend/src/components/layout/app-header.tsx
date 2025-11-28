@@ -1,3 +1,4 @@
+import React from 'react'
 import { IconActivity, IconClock } from '@tabler/icons-react'
 import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
@@ -21,10 +22,10 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
     const hasBreadcrumbs = breadcrumbs && breadcrumbs.length > 0
 
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" role="banner">
             <div className="flex w-full items-center gap-2 px-4">
                 {/* Izquierda: Trigger del sidebar */}
-                <SidebarTrigger className="-ml-1" />
+                <SidebarTrigger className="-ml-1" aria-label="Abrir/Cerrar menú de navegación" />
                 <Separator
                     orientation="vertical"
                     className="mr-2 data-[orientation=vertical]:h-4"
@@ -38,20 +39,20 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
                                 const isLast = index === breadcrumbs.length - 1
 
                                 return (
-                                    <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden md:block" : ""}>
-                                        {!isLast && crumb.href ? (
-                                            <>
+                                    <React.Fragment key={`${crumb.label}-${index}`}>
+                                        <BreadcrumbItem className={!isLast ? "hidden md:block" : ""}>
+                                            {!isLast && crumb.href ? (
                                                 <BreadcrumbLink asChild>
                                                     <Link href={crumb.href}>
                                                         {crumb.label}
                                                     </Link>
                                                 </BreadcrumbLink>
-                                                <BreadcrumbSeparator className="hidden md:block" />
-                                            </>
-                                        ) : (
-                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                                        )}
-                                    </BreadcrumbItem>
+                                            ) : (
+                                                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                                            )}
+                                        </BreadcrumbItem>
+                                        {!isLast && <BreadcrumbSeparator className="hidden md:block" />}
+                                    </React.Fragment>
                                 )
                             })}
                         </BreadcrumbList>

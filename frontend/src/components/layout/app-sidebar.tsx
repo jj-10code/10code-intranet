@@ -1,7 +1,8 @@
 import * as React from "react"
-import { usePage } from '@inertiajs/react'
+import defaultAvatar from '@/assets/default-avatar.svg'
+import { usePage, Link } from '@inertiajs/react'
+import { useEffect } from "react"
 import {
-  IconBuilding,
   IconDashboard,
   IconHelp,
   IconUsers,
@@ -10,6 +11,7 @@ import {
 import { NavMain } from './nav-main'
 import { NavSecondary } from './nav-secondary'
 import { NavUser } from './nav-user'
+import { ThemeToggle } from './theme-toggle'
 import {
   Sidebar,
   SidebarContent,
@@ -18,9 +20,10 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from '@/components/ui/sidebar'
 
-import defaultAvatar from '@/assets/default-avatar.svg'
+import Logo10Code from '@/assets/logo_10code.webp'
 
 const navigationData = {
   navMain: [
@@ -50,9 +53,18 @@ const navigationData = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { auth } = usePage<{ auth: { user: { id: number; name: string; email: string; avatar: string | null } } }>().props
+  const { setOpenMobile, isMobile } = useSidebar()
+  const { url } = usePage()
+
+  // Cerrar sidebar móvil al navegar
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false)
+    }
+  }, [url, isMobile, setOpenMobile])
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} aria-label="Navegación principal">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -60,10 +72,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconBuilding className="!size-5" />
-                <span className="text-base font-semibold">10Code</span>
-              </a>
+              <Link href="/dashboard/">
+                <img src={Logo10Code} alt="10Code Logo" className="size-5 object-contain" />
+                <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
+                  10Code
+                </span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -71,7 +85,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={navigationData.navMain} />
 
-        <NavSecondary items={navigationData.navSecondary} className="mt-auto" />
+        <NavSecondary items={navigationData.navSecondary} className="mt-auto">
+          <SidebarMenuItem>
+            <ThemeToggle asSidebarItem />
+          </SidebarMenuItem>
+        </NavSecondary>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={{

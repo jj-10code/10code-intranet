@@ -14,4 +14,6 @@ urlpatterns = [
     path("dashboard/", views.dashboard_view, name="dashboard"),
     # Perfil
     path("profile/", views.profile_view, name="profile"),
+    # Usuarios
+    path("users/", views.users_index, name="users_index"),
 ]
