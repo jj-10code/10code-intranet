@@ -3,7 +3,7 @@
 # ============================================================================
 # Comandos útiles para desarrollo con Docker
 
-.PHONY: help build up down logs shell test migrate createsuperuser clean restart
+.PHONY: help build up down logs shell test migrate createsuperuser clean restart test-frontend test-e2e test-all
 
 # Variables
 COMPOSE = docker compose
@@ -78,6 +78,21 @@ test-coverage: ## Ejecutar tests con cobertura
 
 test-fast: ## Ejecutar tests sin migraciones
 	$(COMPOSE) exec $(SERVICE_WEB) pytest --nomigrations
+
+test-frontend: ## Ejecutar tests del frontend
+	cd frontend && pnpm test
+
+test-e2e: ## Ejecutar tests E2E del frontend
+	docker compose --profile test up --abort-on-container-exit frontend-test
+
+test-all: ## Ejecutar todos los tests (backend + frontend + E2E)
+	@echo "🧪 Ejecutando tests del backend..."
+	$(MAKE) test
+	@echo "🧪 Ejecutando tests del frontend..."
+	$(MAKE) test-frontend
+	@echo "🧪 Ejecutando tests E2E..."
+	$(MAKE) test-e2e
+	@echo "✅ Todos los tests completados"
 
 # ============================================================================
 # DATABASE

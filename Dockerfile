@@ -48,7 +48,31 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     fi
 
 # ============================================================================
-# STAGE 2: Runtime - Imagen final minimalista
+# STAGE 2: Testing - Frontend Tests with Coverage
+# ============================================================================
+FROM mcr.microsoft.com/playwright:v1.57.0-jammy AS test
+
+WORKDIR /app/frontend
+
+# Enable corepack for pnpm
+RUN corepack enable
+
+# Copy package files first for better caching
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+
+# Install dependencies with frozen lockfile
+RUN --mount=type=cache,target=/root/.pnpm-store \
+    pnpm install --frozen-lockfile
+
+# Copy frontend source code
+COPY frontend/ ./
+
+# Playwright browsers are already installed in the base image
+# Run unit tests
+RUN pnpm test
+
+# ============================================================================
+# STAGE 3: Runtime - Imagen final minimalista
 # ============================================================================
 FROM python:3.14-slim-trixie AS runtime
 

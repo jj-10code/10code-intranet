@@ -1,17 +1,9 @@
-import { Head, Link, usePage } from "@inertiajs/react"
+import { Link } from "@inertiajs/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Separator } from "@/components/ui/separator"
-import { Home, User, LogOut, Menu } from "lucide-react"
-import logoBlack from "../../assets/logo_black.webp"
+import { Home, User } from "lucide-react"
+import { AppLayout } from "@/components/layout"
 
 interface User {
     id: number
@@ -31,98 +23,9 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ user, title }: DashboardProps) {
-    const csrf_token = (usePage().props as any).csrf_token
-
     return (
-        <div className="min-h-screen bg-background">
-            <Head title={title} />
-
-            {/* Header */}
-            <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container flex h-16 items-center px-4">
-                    {/* Mobile menu button */}
-                    <Button variant="ghost" size="icon" className="md:hidden">
-                        <Menu className="h-5 w-5" />
-                        <span className="sr-only">Toggle navigation menu</span>
-                    </Button>
-
-                    {/* Logo and title */}
-                    <div className="mr-4 flex items-center space-x-2">
-                        <img src={logoBlack} alt="10Code Logo" className="h-8 w-auto object-contain" />
-                        <span className="hidden font-bold sm:inline-block text-xl">
-                            10Code
-                        </span>
-                    </div>
-
-                    <div className="flex flex-1 items-center justify-end space-x-2">
-                        {/* Navigation - hidden on mobile */}
-                        <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                            <Link
-                                href="/dashboard/"
-                                className="transition-colors hover:text-foreground/80 text-foreground"
-                            >
-                                Inicio
-                            </Link>
-                        </nav>
-
-                        {/* User menu */}
-                        <div className="flex items-center space-x-2">
-                            <form action="/logout/" method="post">
-                                <input type="hidden" name="csrfmiddlewaretoken" value={csrf_token} />
-                                <Button variant="ghost" size="icon" type="submit" title="Cerrar Sesión">
-                                    <LogOut className="h-5 w-5" />
-                                    <span className="sr-only">Cerrar Sesión</span>
-                                </Button>
-                            </form>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                                        <Avatar className="h-10 w-10">
-                                            <AvatarImage src={user.avatar_url} alt={user.full_name} />
-                                            <AvatarFallback>
-                                                {user.first_name ? user.first_name.charAt(0) : user.email.charAt(0).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-56" align="end" forceMount>
-                                    <DropdownMenuLabel className="font-normal">
-                                        <div className="flex flex-col space-y-1">
-                                            <p className="text-sm font-medium leading-none">{user.full_name}</p>
-                                            <p className="text-xs leading-none text-muted-foreground">
-                                                {user.email}
-                                            </p>
-                                        </div>
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <Link href="/accounts/profile/" className="cursor-pointer">
-                                            <User className="mr-2 h-4 w-4" />
-                                            Mi Perfil
-                                        </Link>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem asChild>
-                                        <form action="/logout/" method="post" className="w-full">
-                                            <input type="hidden" name="csrfmiddlewaretoken" value={csrf_token} />
-                                            <button
-                                                type="submit"
-                                                className="flex w-full items-center px-2 py-1.5 text-sm cursor-pointer text-destructive hover:bg-accent hover:text-accent-foreground rounded-md transition-colors"
-                                            >
-                                                <LogOut className="mr-2 h-4 w-4" />
-                                                Cerrar Sesión
-                                            </button>
-                                        </form>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            {/* Main Content */}
-            <main className="flex-1 space-y-6 p-6 md:p-8">
+        <AppLayout title={title}>
+            <div className="space-y-6">
                 <div className="flex items-center justify-between">
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
                 </div>
@@ -226,7 +129,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </AppLayout>
     )
 }

@@ -20,4 +20,12 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  // Override rules for Playwright test files to avoid React hooks false positives
+  {
+    files: ['tests/**/*.ts'],
+    rules: {
+      'react-hooks/exhaustive-deps': 'off',
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
 ])
