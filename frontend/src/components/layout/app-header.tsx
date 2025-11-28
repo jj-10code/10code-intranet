@@ -1,3 +1,4 @@
+import React from 'react'
 import { IconActivity, IconClock } from '@tabler/icons-react'
 import { Link } from '@inertiajs/react'
 import { Button } from '@/components/ui/button'
@@ -38,20 +39,20 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
                                 const isLast = index === breadcrumbs.length - 1
 
                                 return (
-                                    <BreadcrumbItem key={`${crumb.label}-${index}`} className={!isLast ? "hidden sm:block" : ""}>
-                                        {!isLast && crumb.href ? (
-                                            <>
+                                    <React.Fragment key={`${crumb.label}-${index}`}>
+                                        <BreadcrumbItem className={!isLast ? "hidden md:block" : ""}>
+                                            {!isLast && crumb.href ? (
                                                 <BreadcrumbLink asChild>
                                                     <Link href={crumb.href}>
                                                         {crumb.label}
                                                     </Link>
                                                 </BreadcrumbLink>
-                                                <BreadcrumbSeparator className="hidden sm:block" />
-                                            </>
-                                        ) : (
-                                            <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                                        )}
-                                    </BreadcrumbItem>
+                                            ) : (
+                                                <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+                                            )}
+                                        </BreadcrumbItem>
+                                        {!isLast && <BreadcrumbSeparator className="hidden md:block" />}
+                                    </React.Fragment>
                                 )
                             })}
                         </BreadcrumbList>

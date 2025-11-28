@@ -142,3 +142,29 @@ def profile_view(request: HttpRequest) -> HttpResponse:
             "title": "Mi Perfil - 10Code Intranet",
         },
     )
+
+
+@login_required
+@require_http_methods(["GET"])
+def users_index(request: HttpRequest) -> HttpResponse:
+    """
+    Vista de listado de usuarios.
+    """
+    from django.contrib.auth import get_user_model
+    
+    User = get_user_model()
+    users = User.objects.all().values('id', 'first_name', 'last_name', 'email')
+    
+    # Formatear datos para el frontend
+    users_list = [
+        {
+            'id': user['id'],
+            'name': f"{user['first_name']} {user['last_name']}".strip() or 'Sin nombre',
+            'email': user['email'],
+        }
+        for user in users
+    ]
+    
+    return render(request, 'Users/Index', props={
+        'users': users_list
+    })

@@ -1,8 +1,8 @@
 import * as React from "react"
+import defaultAvatar from '@/assets/default-avatar.svg'
 import { usePage, Link } from '@inertiajs/react'
 import { useEffect } from "react"
 import {
-  IconBuilding,
   IconDashboard,
   IconHelp,
   IconUsers,
@@ -22,7 +22,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 
-import defaultAvatar from '@/assets/default-avatar.svg'
+import Logo10Code from '@/assets/logo_10code.webp'
 
 const navigationData = {
   navMain: [
@@ -72,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/dashboard/">
-                <IconBuilding className="!size-5" />
+                <img src={Logo10Code} alt="10Code Logo" className="size-5 object-contain" />
                 <span className="text-base font-semibold group-data-[collapsible=icon]:hidden">
                   10Code
                 </span>
