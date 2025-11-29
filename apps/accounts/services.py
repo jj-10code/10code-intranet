@@ -346,21 +346,34 @@ class UserService:
 
     @staticmethod
     @transaction.atomic
-    def deactivate_user(*, user: User, deactivated_by: User) -> User:
+    def deactivate_user(*, user: User, deactivated_by: User, reason: str) -> User:
         """
-        Desactiva un usuario.
+        Desactiva un usuario (soft delete).
 
         Args:
             user: Usuario a desactivar
             deactivated_by: Usuario que realiza la acción
+            reason: Motivo de desactivación
 
         Returns:
             Usuario desactivado
-        """
-        user.is_active = False
-        user.save(update_fields=["is_active"])
 
-        # Registrar en AuditLog
+        Raises:
+            PermissionError: si deactivated_by no tiene permiso
+        """
+        # 1. Verificar permiso
+        if not deactivated_by.has_perm("accounts.delete_user"):
+            raise PermissionError("No tiene permiso para desactivar usuarios.")
+
+        # 2. Marcar is_active = False (idempotente)
+        if user.is_active:
+            user.is_active = False
+            user.save(update_fields=["is_active"])
+            logger.info(f"Usuario desactivado: {user.email} por {deactivated_by.email}")
+        else:
+            logger.info(f"Usuario {user.email} ya estaba desactivado")
+
+        # 3. Registrar en AuditLog (siempre, incluso si ya estaba desactivado)
         AuditLog.objects.create(
             user=deactivated_by,
             action=AuditLog.Action.USER_DEACTIVATED,
@@ -368,9 +381,10 @@ class UserService:
             resource_id=user.id,
             metadata={
                 "deactivated_user_email": user.email,
+                "reason": reason,
             },
         )
 
-        logger.info(f"Usuario desactivado: {user.email} por {deactivated_by.email}")
+        # 4. Nota: Sesiones se invalidan via ActivityTrackingMiddleware
 
         return user

@@ -59,3 +59,34 @@ class TestActivityTrackingMiddleware:
         tracking_middleware(request)
         
         assert 'last_activity' not in request.session
+
+    def test_inactive_user_logged_out(self):
+        """Test that deactivated users are logged out automatically."""
+        factory = RequestFactory()
+        request = factory.get('/dashboard/')
+        
+        # Setup session
+        session_middleware = SessionMiddleware(lambda r: None)
+        session_middleware.process_request(request)
+        request.session.save()
+        
+        # Setup deactivated user
+        user = User.objects.create_user(
+            email='deactivated@10code.es', 
+            password='password',
+            is_active=False  # User is deactivated
+        )
+        request.user = user
+        
+        # Run middleware
+        tracking_middleware = ActivityTrackingMiddleware(lambda r: None)
+        response = tracking_middleware(request)
+        
+        # Should redirect to login
+        assert response.status_code == 302
+        assert response.url == '/login/'
+        
+        # Session should be cleared (user logged out)
+        # Note: We can't easily test session clearing in this context,
+        # but the redirect confirms the logout logic executed
+

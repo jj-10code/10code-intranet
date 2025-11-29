@@ -83,15 +83,66 @@ class TestUserService:
         assert user.last_name == "NewLast"
         assert user.avatar_url == "http://new.url/avatar.jpg"
 
-    def test_deactivate_user(self, user_factory):
+    def test_deactivate_user_success(self, user_factory):
         user = user_factory(is_active=True)
         admin = user_factory(is_staff=True)
+        # Mock permissions
+        admin.has_perm = Mock(return_value=True)
         
         from apps.accounts.services import UserService
-        UserService.deactivate_user(user=user, deactivated_by=admin)
+        UserService.deactivate_user(
+            user=user, 
+            deactivated_by=admin,
+            reason="Baja temporal por excedencia"
+        )
         
         user.refresh_from_db()
         assert user.is_active is False
+        
+        # Verify audit log with reason
+        audit = AuditLog.objects.filter(
+            action=AuditLog.Action.USER_DEACTIVATED,
+            resource_id=user.id
+        ).first()
+        assert audit is not None
+        assert audit.metadata["reason"] == "Baja temporal por excedencia"
+        assert audit.metadata["deactivated_user_email"] == user.email
+
+    def test_deactivate_user_without_permission(self, user_factory):
+        user = user_factory(is_active=True)
+        regular_user = user_factory(is_staff=False)
+        # Mock permissions to False
+        regular_user.has_perm = Mock(return_value=False)
+        
+        from apps.accounts.services import UserService
+        
+        with pytest.raises(PermissionError, match="No tiene permiso"):
+            UserService.deactivate_user(
+                user=user,
+                deactivated_by=regular_user,
+                reason="Intento no autorizado"
+            )
+        
+        # User should still be active
+        user.refresh_from_db()
+        assert user.is_active is True
+
+    def test_deactivate_user_idempotent(self, user_factory):
+        user = user_factory(is_active=False)  # Already deactivated
+        admin = user_factory(is_staff=True)
+        admin.has_perm = Mock(return_value=True)
+        
+        from apps.accounts.services import UserService
+        
+        # Should not raise error
+        result = UserService.deactivate_user(
+            user=user,
+            deactivated_by=admin,
+            reason="Segunda desactivación"
+        )
+        
+        assert result.is_active is False
+        # Audit log should still be created
         assert AuditLog.objects.filter(
             action=AuditLog.Action.USER_DEACTIVATED,
             resource_id=user.id
