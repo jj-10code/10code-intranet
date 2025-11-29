@@ -83,3 +83,25 @@ def user_has_any_role(*, user: User, role_codes: list[str]) -> bool:
         True si tiene al menos uno, False si no
     """
     return user.user_roles.filter(role__code__in=role_codes).exists()
+
+
+class RoleSelector:
+    """
+    Selector para obtener roles disponibles.
+    """
+
+    @staticmethod
+    def get_available_roles() -> list[dict]:
+        """
+        Obtiene lista de roles disponibles para asignar.
+
+        Returns:
+            Lista de diccionarios con 'code' y 'name'
+        """
+        from apps.accounts.models import Role
+
+        return list(
+            Role.objects.filter(is_system=False)
+            .values("code", "name")
+            .order_by("name")
+        )
