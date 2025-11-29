@@ -78,6 +78,9 @@ class User(AbstractUser):
     # Información básica (extraída de Google)
     first_name = models.CharField(max_length=150, verbose_name="Nombre")
     last_name = models.CharField(max_length=150, verbose_name="Apellidos")
+    date_of_birth = models.DateField(
+        null=True, blank=True, verbose_name="Fecha de nacimiento"
+    )
 
     # Avatar (URL de Google)
     avatar_url = models.URLField(

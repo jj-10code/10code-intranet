@@ -96,3 +96,133 @@ class TestUserService:
             action=AuditLog.Action.USER_DEACTIVATED,
             resource_id=user.id
         ).exists()
+
+    def test_create_user_manually_success(self, user_factory):
+        admin = user_factory(is_staff=True)
+        # Mock permissions
+        admin.has_perm = Mock(return_value=True)
+        
+        # Ensure roles exist
+        RoleFactory(code="employee")
+        RoleFactory(code="manager")
+        
+        from apps.accounts.services import UserService
+        
+        dob = timezone.now().date().replace(year=2000)
+        
+        user = UserService.create_user_manually(
+            email="newuser@10code.es",
+            first_name="New",
+            last_name="User",
+            date_of_birth=dob,
+            roles=["employee", "manager"],
+            created_by=admin
+        )
+        
+        assert user.email == "newuser@10code.es"
+        assert user.is_active is False
+        assert user.has_role("employee")
+        assert user.has_role("manager")
+        assert user.date_of_birth == dob
+        
+        assert AuditLog.objects.filter(
+            action=AuditLog.Action.USER_CREATED,
+            resource_id=user.id
+        ).exists()
+        
+        # Verify role assignment logs
+        assert AuditLog.objects.filter(
+            action=AuditLog.Action.ROLE_ASSIGNED,
+            resource_id=user.id
+        ).count() == 2
+
+    def test_create_user_manually_invalid_domain(self, user_factory):
+        admin = user_factory(is_staff=True)
+        admin.has_perm = Mock(return_value=True)
+        
+        from apps.accounts.services import UserService
+        from django.core.exceptions import ValidationError
+        
+        with pytest.raises(ValidationError, match="dominio"):
+            UserService.create_user_manually(
+                email="bad@gmail.com",
+                first_name="Bad",
+                last_name="Email",
+                date_of_birth=timezone.now().date().replace(year=2000),
+                roles=[],
+                created_by=admin
+            )
+
+    def test_create_user_manually_duplicate_email(self, user_factory):
+        existing = user_factory(email="existing@10code.es")
+        admin = user_factory(is_staff=True)
+        admin.has_perm = Mock(return_value=True)
+        
+        from apps.accounts.services import UserService
+        from django.core.exceptions import ValidationError
+        
+        with pytest.raises(ValidationError, match="Ya existe"):
+            UserService.create_user_manually(
+                email="existing@10code.es",
+                first_name="Dup",
+                last_name="Email",
+                date_of_birth=timezone.now().date().replace(year=2000),
+                roles=[],
+                created_by=admin
+            )
+
+    def test_create_user_manually_underage(self, user_factory):
+        admin = user_factory(is_staff=True)
+        admin.has_perm = Mock(return_value=True)
+        
+        from apps.accounts.services import UserService
+        from django.core.exceptions import ValidationError
+        
+        # 15 years old
+        dob = timezone.now().date().replace(year=timezone.now().year - 15)
+        
+        with pytest.raises(ValidationError, match="16 años"):
+            UserService.create_user_manually(
+                email="kid@10code.es",
+                first_name="Kid",
+                last_name="User",
+                date_of_birth=dob,
+                roles=[],
+                created_by=admin
+            )
+
+    def test_create_user_manually_no_permission(self, user_factory):
+        admin = user_factory(is_staff=False)
+        # Mock permissions to False
+        admin.has_perm = Mock(return_value=False)
+        
+        from apps.accounts.services import UserService
+        from django.core.exceptions import PermissionDenied
+        
+        with pytest.raises(PermissionDenied):
+            UserService.create_user_manually(
+                email="valid@10code.es",
+                first_name="Valid",
+                last_name="User",
+                date_of_birth=timezone.now().date().replace(year=2000),
+                roles=[],
+                created_by=admin
+            )
+
+@pytest.mark.django_db
+class TestRoleService:
+    def test_assign_role_to_user(self, user_factory):
+        user = user_factory()
+        admin = user_factory(is_staff=True)
+        role = RoleFactory(code="test_role")
+        
+        from apps.accounts.services import RoleService
+        
+        RoleService.assign_role_to_user(user=user, role_code="test_role", assigned_by=admin)
+        
+        assert user.has_role("test_role")
+        assert AuditLog.objects.filter(
+            action=AuditLog.Action.ROLE_ASSIGNED,
+            user=admin,
+            resource_id=user.id
+        ).exists()

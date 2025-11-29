@@ -9,6 +9,7 @@ import logging
 from typing import Optional
 
 from django.contrib.auth import authenticate, login, logout
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
@@ -156,12 +157,151 @@ class AuthService:
         )
 
 
+
+class RoleService:
+    """
+    Servicio de gestión de roles.
+
+    Maneja la asignación y revocación de roles.
+    """
+
+    @staticmethod
+    @transaction.atomic
+    def assign_role_to_user(
+        *, user: User, role_code: str, assigned_by: Optional[User] = None
+    ) -> UserRole:
+        """
+        Asigna un rol a un usuario.
+
+        Args:
+            user: Usuario al que asignar el rol
+            role_code: Código del rol a asignar
+            assigned_by: Usuario que realiza la asignación (opcional)
+
+        Returns:
+            UserRole creado o existente
+
+        Raises:
+            Role.DoesNotExist: Si el rol no existe
+        """
+        role = Role.objects.get(code=role_code)
+
+        user_role, created = UserRole.objects.get_or_create(
+            user=user,
+            role=role,
+            defaults={"assigned_by": assigned_by},
+        )
+
+        if created:
+            # Registrar en AuditLog
+            AuditLog.objects.create(
+                user=assigned_by,
+                action=AuditLog.Action.ROLE_ASSIGNED,
+                resource_type="User",
+                resource_id=user.id,
+                metadata={
+                    "role_code": role.code,
+                    "role_name": role.name,
+                    "assigned_to": user.email,
+                },
+            )
+            logger.info(f"Rol '{role.code}' asignado a {user.email} por {assigned_by}")
+        else:
+            logger.info(f"Usuario {user.email} ya tenía el rol '{role.code}'")
+
+        return user_role
+
+
 class UserService:
     """
     Servicio de gestión de usuarios.
 
     Maneja operaciones CRUD de usuarios.
     """
+
+    @staticmethod
+    @transaction.atomic
+    def create_user_manually(
+        *,
+        email: str,
+        first_name: str,
+        last_name: str,
+        date_of_birth: timezone.datetime.date,
+        roles: list[str],
+        created_by: User,
+    ) -> User:
+        """
+        Crear usuario manualmente por administrador.
+
+        Args:
+            email: Email @10code.es
+            first_name: Nombre
+            last_name: Apellido
+            date_of_birth: Fecha de nacimiento (obligatoria)
+            roles: Lista de códigos de roles a asignar
+            created_by: Usuario que crea
+
+        Returns:
+            Usuario creado con is_active=False
+
+        Raises:
+            ValidationError: si email no es @10code.es o ya existe, o edad < 16
+            PermissionDenied: si created_by no tiene permiso
+        """
+        # 1. Verificar permiso del creador
+        if not created_by.has_perm("accounts.add_user"):
+             from django.core.exceptions import PermissionDenied
+             raise PermissionDenied("No tiene permiso para crear usuarios.")
+
+        # 2. Validar dominio
+        if not AuthService.validate_email_domain(email):
+            raise ValidationError("El email debe pertenecer al dominio @10code.es")
+
+        # 3. Validar unicidad
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("Ya existe un usuario con este email.")
+
+        # 4. Validar edad
+        today = timezone.now().date()
+        age = (
+            today.year
+            - date_of_birth.year
+            - ((today.month, today.day) < (date_of_birth.month, date_of_birth.day))
+        )
+        if age < 16:
+            raise ValidationError("El usuario debe tener al menos 16 años.")
+
+        # 5. Crear usuario
+        user = User.objects.create_user(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
+            is_active=False,
+        )
+
+        # 6. Asignar roles
+        for role_code in roles:
+            RoleService.assign_role_to_user(
+                user=user, role_code=role_code, assigned_by=created_by
+            )
+
+        # 7. Audit Log
+        AuditLog.objects.create(
+            user=created_by,
+            action=AuditLog.Action.USER_CREATED,
+            resource_type="User",
+            resource_id=user.id,
+            metadata={
+                "new_user_email": user.email,
+                "roles_assigned": roles,
+                "manual_creation": True,
+            },
+        )
+
+        logger.info(f"Usuario creado manualmente: {user.email} por {created_by.email}")
+
+        return user
 
     @staticmethod
     @transaction.atomic
