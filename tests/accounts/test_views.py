@@ -111,3 +111,105 @@ class TestViews:
         # permission_required raises PermissionDenied which Django handles as 403
         assert response.status_code == 403
 
+
+@pytest.mark.django_db
+class TestUsersDeactivateView:
+    def test_deactivate_user_success(self, client):
+        """Test successful user deactivation with permission."""
+        admin = UserFactory(is_staff=True)
+        user_to_deactivate = UserFactory(is_active=True, email="deactivate@10code.es")
+        
+        # Grant permission
+        from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+        from apps.accounts.models import User
+        
+        content_type = ContentType.objects.get_for_model(User)
+        permission = Permission.objects.get(codename="delete_user", content_type=content_type)
+        admin.user_permissions.add(permission)
+        
+        client.force_login(admin)
+        
+        url = reverse("users_deactivate", kwargs={"user_id": user_to_deactivate.id})
+        response = client.post(url, {"reason": "Baja temporal por excedencia"})
+        
+        assert response.status_code == 302
+        assert response.url == reverse("users_index")
+        
+        # Verify user was deactivated
+        user_to_deactivate.refresh_from_db()
+        assert user_to_deactivate.is_active is False
+        
+        # Verify audit log
+        from apps.accounts.models import AuditLog
+        assert AuditLog.objects.filter(
+            action=AuditLog.Action.USER_DEACTIVATED,
+            resource_id=user_to_deactivate.id
+        ).exists()
+
+    def test_deactivate_user_without_permission(self, client):
+        """Test deactivation fails without permission."""
+        regular_user = UserFactory(is_staff=False)
+        user_to_deactivate = UserFactory(is_active=True)
+        
+        client.force_login(regular_user)
+        
+        url = reverse("users_deactivate", kwargs={"user_id": user_to_deactivate.id})
+        response = client.post(url, {"reason": "Intentando desactivar"})
+        
+        # Should redirect with error message
+        assert response.status_code == 302
+        assert response.url == reverse("users_index")
+        
+        # User should still be active
+        user_to_deactivate.refresh_from_db()
+        assert user_to_deactivate.is_active is True
+
+    def test_deactivate_user_missing_reason(self, client):
+        """Test deactivation fails without reason."""
+        admin = UserFactory(is_staff=True)
+        user_to_deactivate = UserFactory(is_active=True)
+        
+        from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+        from apps.accounts.models import User
+        
+        content_type = ContentType.objects.get_for_model(User)
+        permission = Permission.objects.get(codename="delete_user", content_type=content_type)
+        admin.user_permissions.add(permission)
+        
+        client.force_login(admin)
+        
+        url = reverse("users_deactivate", kwargs={"user_id": user_to_deactivate.id})
+        # POST without reason
+        response = client.post(url, {})
+        
+        assert response.status_code == 302
+        assert response.url == reverse("users_index")
+        
+        # User should still be active
+        user_to_deactivate.refresh_from_db()
+        assert user_to_deactivate.is_active is True
+
+    def test_deactivate_user_not_found(self, client):
+        """Test deactivation with non-existent user ID."""
+        admin = UserFactory(is_staff=True)
+        
+        from django.contrib.auth.models import Permission
+        from django.contrib.contenttypes.models import ContentType
+        from apps.accounts.models import User
+        
+        content_type = ContentType.objects.get_for_model(User)
+        permission = Permission.objects.get(codename="delete_user", content_type=content_type)
+        admin.user_permissions.add(permission)
+        
+        client.force_login(admin)
+        
+        # Use non-existent user ID
+        url = reverse("users_deactivate", kwargs={"user_id": 99999})
+        response = client.post(url, {"reason": "Testing 404"})
+        
+        # Should return 404
+        assert response.status_code == 404
+
+

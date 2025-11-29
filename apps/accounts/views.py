@@ -226,3 +226,42 @@ def users_create(request: HttpRequest) -> HttpResponse:
             },
         },
     )
+
+
+@login_required
+@require_http_methods(["POST"])
+def users_deactivate(request: HttpRequest, user_id: int) -> HttpResponse:
+    """
+    POST: Desactivar usuario por ID.
+    
+    Requiere permiso accounts.delete_user.
+    """
+    from django.contrib import messages
+    from django.shortcuts import get_object_or_404
+    from django.contrib.auth import get_user_model
+    from apps.accounts.services import UserService
+    
+    User = get_user_model()
+    user = get_object_or_404(User, id=user_id)
+    
+    reason = request.POST.get('reason', '')
+    if not reason:
+        messages.error(request, "El motivo de desactivación es obligatorio.")
+        return redirect("users_index")
+    
+    try:
+        UserService.deactivate_user(
+            user=user,
+            deactivated_by=request.user,
+            reason=reason
+        )
+        messages.success(request, f"Usuario {user.email} desactivado correctamente.")
+    except PermissionError as e:
+        messages.error(request, str(e))
+        return redirect("users_index")
+    except Exception as e:
+        messages.error(request, f"Error al desactivar usuario: {str(e)}")
+        return redirect("users_index")
+    
+    return redirect("users_index")
+

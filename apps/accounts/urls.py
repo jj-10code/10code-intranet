@@ -17,4 +17,5 @@ urlpatterns = [
     # Usuarios
     path("users/", views.users_index, name="users_index"),
     path("users/create/", views.users_create, name="users_create"),
+    path("users/<int:user_id>/deactivate/", views.users_deactivate, name="users_deactivate"),
 ]
