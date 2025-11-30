@@ -9,10 +9,13 @@ from allauth.socialaccount.models import SocialAccount
 from inertia import render
 
 from django.contrib.auth.decorators import login_required, permission_required
+from django.core.paginator import Paginator
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect
 from django.views.decorators.http import require_http_methods
 
+from apps.accounts.selectors import UserSelector
+from apps.accounts.serializers import UserSerializer
 from apps.accounts.services import AuthService
 
 
@@ -145,28 +148,40 @@ def profile_view(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-@require_http_methods(["GET"])
+@permission_required('accounts.view_user', raise_exception=True)
 def users_index(request: HttpRequest) -> HttpResponse:
-    """
-    Vista de listado de usuarios.
-    """
-    from django.contrib.auth import get_user_model
-    
-    User = get_user_model()
-    users = User.objects.all().values('id', 'first_name', 'last_name', 'email')
-    
-    # Formatear datos para el frontend
-    users_list = [
-        {
-            'id': user['id'],
-            'name': f"{user['first_name']} {user['last_name']}".strip() or 'Sin nombre',
-            'email': user['email'],
-        }
-        for user in users
-    ]
-    
+    """Lista de usuarios con filtros y paginación."""
+    filters = {
+        'is_active': request.GET.get('is_active'),
+        'search': request.GET.get('search'),
+        'role': request.GET.get('role'),
+    }
+
+    # Convertir is_active a boolean si está presente
+    if filters['is_active'] is not None:
+        filters['is_active'] = filters['is_active'].lower() in ('true', '1', 'yes')
+
+    users_qs = UserSelector.get_users_list(
+        user=request.user,
+        filters=filters
+    )
+
+    # Paginación (Django Paginator)
+    paginator = Paginator(users_qs, 20)
+    page = paginator.get_page(request.GET.get('page', 1))
+
     return render(request, 'Users/Index', props={
-        'users': users_list
+        'users': [UserSerializer(u) for u in page],
+        'filters': filters,
+        'pagination': {
+            'current_page': page.number,
+            'total_pages': paginator.num_pages,
+            'has_next': page.has_next(),
+            'has_previous': page.has_previous(),
+        },
+        'permissions': {
+            'can_create': request.user.has_perm('accounts.add_user'),
+        }
     })
 
 
@@ -180,6 +195,7 @@ def users_create(request: HttpRequest) -> HttpResponse:
     POST: Procesa creación.
     """
     from django.contrib import messages
+
     from apps.accounts.forms import UserCreationForm
     from apps.accounts.selectors import RoleSelector
     from apps.accounts.services import UserService
@@ -233,22 +249,23 @@ def users_create(request: HttpRequest) -> HttpResponse:
 def users_deactivate(request: HttpRequest, user_id: int) -> HttpResponse:
     """
     POST: Desactivar usuario por ID.
-    
+
     Requiere permiso accounts.delete_user.
     """
     from django.contrib import messages
-    from django.shortcuts import get_object_or_404
     from django.contrib.auth import get_user_model
+    from django.shortcuts import get_object_or_404
+
     from apps.accounts.services import UserService
-    
-    User = get_user_model()
-    user = get_object_or_404(User, id=user_id)
-    
+
+    user_model = get_user_model()
+    user = get_object_or_404(user_model, id=user_id)
+
     reason = request.POST.get('reason', '')
     if not reason:
         messages.error(request, "El motivo de desactivación es obligatorio.")
         return redirect("users_index")
-    
+
     try:
         UserService.deactivate_user(
             user=user,
@@ -260,8 +277,8 @@ def users_deactivate(request: HttpRequest, user_id: int) -> HttpResponse:
         messages.error(request, str(e))
         return redirect("users_index")
     except Exception as e:
-        messages.error(request, f"Error al desactivar usuario: {str(e)}")
+        messages.error(request, f"Error al desactivar usuario: {e!s}")
         return redirect("users_index")
-    
+
     return redirect("users_index")
 

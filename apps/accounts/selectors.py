@@ -133,11 +133,11 @@ class UserSelector:
 
         # Aplicar filtros
         if filters:
-            if 'is_active' in filters:
+            if filters.get('is_active') is not None:
                 qs = qs.filter(is_active=filters['is_active'])
-            if 'role' in filters:
+            if filters.get('role'):
                 qs = qs.filter(user_roles__role__code=filters['role'])
-            if 'search' in filters:
+            if filters.get('search'):
                 qs = qs.filter(
                     Q(email__icontains=filters['search']) |
                     Q(first_name__icontains=filters['search']) |
