@@ -53,7 +53,7 @@ export function DeactivateUserModal({ user, open, onOpenChange }: DeactivateUser
                 <DialogHeader>
                     <DialogTitle>Desactivar Usuario</DialogTitle>
                     <DialogDescription>
-                        ¿Estás seguro de que quieres desactivar a <strong>{user.full_name}</strong> ({user.email})?
+                        ¿Estás seguro de que quieres desactivar a <strong>{user.first_name} {user.last_name}</strong> ({user.email})?
                         Esta acción bloqueará el acceso del usuario al sistema.
                     </DialogDescription>
                 </DialogHeader>

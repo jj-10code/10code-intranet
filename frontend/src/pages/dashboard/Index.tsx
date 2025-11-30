@@ -2,20 +2,10 @@ import { Link } from "@inertiajs/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { Home, User } from "lucide-react"
+import { Home, User as UserIcon } from "lucide-react"
 import { AppLayout } from "@/components/layout"
 
-interface User {
-    id: number
-    email: string
-    full_name: string
-    first_name: string
-    last_name: string
-    avatar_url: string
-    is_staff: boolean
-    is_superuser: boolean
-    roles: string[]
-}
+import type { User } from "@/types/models"
 
 interface DashboardProps {
     user: User
@@ -39,14 +29,14 @@ export default function Dashboard({ user, title }: DashboardProps) {
                             <div className="flex flex-col space-y-1.5 p-6">
                                 <div className="flex items-center gap-4">
                                     <Avatar className="h-16 w-16">
-                                        <AvatarImage src={user.avatar_url} alt={user.full_name} />
+                                        <AvatarImage src={user.avatar_url || undefined} alt={`${user.first_name} ${user.last_name}`} />
                                         <AvatarFallback className="text-lg">
                                             {user.first_name ? user.first_name.charAt(0) : user.email.charAt(0).toUpperCase()}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="space-y-1">
                                         <h2 className="text-2xl font-semibold leading-none tracking-tight">
-                                            ¡Bienvenido, {user.first_name || user.full_name}!
+                                            ¡Bienvenido, {user.first_name}!
                                         </h2>
                                         <p className="text-sm text-muted-foreground">
                                             Has iniciado sesión correctamente en la intranet de 10Code
@@ -104,7 +94,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                         <div className="space-y-2">
                             <Button variant="outline" size="sm" asChild className="w-full justify-start">
                                 <Link href="/accounts/profile/">
-                                    <User className="mr-2 h-4 w-4" />
+                                    <UserIcon className="mr-2 h-4 w-4" />
                                     Ver mi perfil
                                 </Link>
                             </Button>
@@ -113,7 +103,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
 
                     <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
                         <div className="flex items-center gap-2 mb-4">
-                            <User className="h-5 w-5 text-primary" />
+                            <UserIcon className="h-5 w-5 text-primary" />
                             <h3 className="text-lg font-semibold">Mi Cuenta</h3>
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
@@ -122,7 +112,7 @@ export default function Dashboard({ user, title }: DashboardProps) {
                         <div className="space-y-2">
                             <Button variant="outline" size="sm" asChild className="w-full justify-start">
                                 <Link href="/accounts/profile/">
-                                    <User className="mr-2 h-4 w-4" />
+                                    <UserIcon className="mr-2 h-4 w-4" />
                                     Editar perfil
                                 </Link>
                             </Button>

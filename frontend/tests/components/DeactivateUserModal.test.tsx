@@ -16,9 +16,10 @@ describe('DeactivateUserModal', () => {
         email: 'john@10code.es',
         first_name: 'John',
         last_name: 'Doe',
-        full_name: 'John Doe',
-        is_staff: false,
-        is_superuser: false,
+        avatar_url: null,
+        is_active: true,
+        date_of_birth: '1990-01-01',
+        roles: ['employee'],
     }
 
     const mockOnOpenChange = vi.fn()

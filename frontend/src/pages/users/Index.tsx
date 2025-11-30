@@ -1,10 +1,6 @@
 import { AppLayout } from '@/components/layout'
 
-interface User {
-    id: number
-    name: string
-    email: string
-}
+import type { User } from '@/types/models'
 
 interface UsersProps {
     users: User[]
@@ -37,7 +33,7 @@ export default function UsersIndex({ users }: UsersProps) {
                         <tbody>
                             {users.map((user) => (
                                 <tr key={user.id} className="border-b last:border-0">
-                                    <td className="p-4">{user.name}</td>
+                                    <td className="p-4">{user.first_name} {user.last_name}</td>
                                     <td className="p-4 text-muted-foreground">{user.email}</td>
                                 </tr>
                             ))}
