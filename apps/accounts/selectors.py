@@ -5,14 +5,13 @@ Contienen queries optimizadas de solo lectura (READ operations).
 Siguen el patrón Selector para separación de responsabilidades.
 """
 
-from typing import Optional
 
-from django.db.models import QuerySet
+from django.db.models import Prefetch, Q, QuerySet
 
-from apps.accounts.models import User
+from apps.accounts.models import User, UserRole
 
 
-def get_user_by_email(*, email: str) -> Optional[User]:
+def get_user_by_email(*, email: str) -> User | None:
     """
     Obtiene un usuario por su email.
 
@@ -31,7 +30,7 @@ def get_user_by_email(*, email: str) -> Optional[User]:
         return None
 
 
-def get_user_by_id(*, user_id: int) -> Optional[User]:
+def get_user_by_id(*, user_id: int) -> User | None:
     """
     Obtiene un usuario por su ID.
 
@@ -105,3 +104,44 @@ class RoleSelector:
             .values("code", "name")
             .order_by("name")
         )
+
+
+class UserSelector:
+    """
+    Selector para obtener usuarios con filtros y optimizaciones.
+    """
+
+    @staticmethod
+    def get_users_list(
+        *,
+        user: User,  # noqa: ARG004  # For future permission checking
+        filters: dict | None = None
+    ) -> QuerySet[User]:
+        """
+        Obtener lista de usuarios con filtros y optimizaciones.
+
+        Args:
+            user: Usuario solicitante (para permisos)
+            filters: Dict con is_active, role, department, search
+
+        Returns:
+            QuerySet optimizado con select_related/prefetch_related
+        """
+        qs = User.objects.select_related('google_profile').prefetch_related(
+            Prefetch('user_roles', queryset=UserRole.objects.select_related('role'))
+        )
+
+        # Aplicar filtros
+        if filters:
+            if 'is_active' in filters:
+                qs = qs.filter(is_active=filters['is_active'])
+            if 'role' in filters:
+                qs = qs.filter(user_roles__role__code=filters['role'])
+            if 'search' in filters:
+                qs = qs.filter(
+                    Q(email__icontains=filters['search']) |
+                    Q(first_name__icontains=filters['search']) |
+                    Q(last_name__icontains=filters['search'])
+                )
+
+        return qs.order_by('-date_joined')

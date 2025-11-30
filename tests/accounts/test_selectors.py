@@ -7,6 +7,7 @@ Verifica funciones de consulta de usuarios, roles y permisos.
 import pytest
 
 from apps.accounts.selectors import (
+    UserSelector,
     get_active_users,
     get_user_by_email,
     get_user_by_id,
@@ -85,3 +86,85 @@ class TestSelectors:
         assert user_has_any_role(user=user, role_codes=["admin", "employee"]) is True
         assert user_has_any_role(user=user, role_codes=["manager", "employee"]) is False
         assert user_has_any_role(user=user, role_codes=["employee"]) is False
+
+    def test_get_users_list_basic(self, user_factory):
+        """Verifica que get_users_list retorna todos los usuarios ordenados por fecha."""
+        user1 = user_factory(email="a@10code.es")
+        user2 = user_factory(email="b@10code.es")
+
+        qs = UserSelector.get_users_list(user=user1)
+        users = list(qs)
+
+        assert len(users) == 2
+        # Ordenado por -date_joined, el último creado primero
+        assert users[0] == user2
+        assert users[1] == user1
+
+    def test_get_users_list_filter_is_active(self, user_factory):
+        """Verifica filtro por is_active."""
+        active_user = user_factory(email="active@10code.es", is_active=True)
+        user_factory(email="inactive@10code.es", is_active=False)  # Create inactive user
+
+        qs = UserSelector.get_users_list(user=active_user, filters={"is_active": True})
+        users = list(qs)
+
+        assert len(users) == 1
+        assert users[0] == active_user
+
+    def test_get_users_list_filter_role(self, user_factory, role_factory, user_role_factory):
+        """Verifica filtro por rol."""
+        user1 = user_factory(email="admin@10code.es")
+        user2 = user_factory(email="employee@10code.es")
+        admin_role = role_factory(code="admin")
+        employee_role = role_factory(code="employee")
+
+        user_role_factory(user=user1, role=admin_role)
+        user_role_factory(user=user2, role=employee_role)
+
+        qs = UserSelector.get_users_list(user=user1, filters={"role": "admin"})
+        users = list(qs)
+
+        assert len(users) == 1
+        assert users[0] == user1
+
+    def test_get_users_list_filter_search(self, user_factory):
+        """Verifica filtro por búsqueda en email, nombre y apellidos."""
+        user1 = user_factory(email="john@10code.es", first_name="John", last_name="Doe")
+        user2 = user_factory(email="jane@10code.es", first_name="Jane", last_name="Smith")
+
+        # Buscar por email
+        qs = UserSelector.get_users_list(user=user1, filters={"search": "john"})
+        users = list(qs)
+        assert len(users) == 1
+        assert users[0] == user1
+
+        # Buscar por nombre
+        qs = UserSelector.get_users_list(user=user1, filters={"search": "Jane"})
+        users = list(qs)
+        assert len(users) == 1
+        assert users[0] == user2
+
+        # Buscar por apellido
+        qs = UserSelector.get_users_list(user=user1, filters={"search": "Smith"})
+        users = list(qs)
+        assert len(users) == 1
+        assert users[0] == user2
+
+    def test_get_users_list_combined_filters(self, user_factory, role_factory, user_role_factory):
+        """Verifica combinación de filtros."""
+        user1 = user_factory(email="admin@10code.es", first_name="Admin", is_active=True)
+        user_factory(email="inactive@10code.es", first_name="Inactive", is_active=False)  # Create inactive user
+        admin_role = role_factory(code="admin")
+
+        user_role_factory(user=user1, role=admin_role)
+
+        # Filtro por rol y búsqueda
+        qs = UserSelector.get_users_list(
+            user=user1,
+            filters={"role": "admin", "search": "Admin", "is_active": True}
+        )
+        users = list(qs)
+
+        assert len(users) == 1
+        assert users[0] == user1
+
