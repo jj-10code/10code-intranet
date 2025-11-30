@@ -1,3 +1,9 @@
+"""
+Tests para los adaptadores de autenticación social.
+
+Verifica la lógica de integración con Google OAuth.
+"""
+
 import pytest
 from unittest.mock import Mock
 from django.core.exceptions import PermissionDenied
@@ -6,9 +12,14 @@ from apps.accounts.adapters import SocialAccountAdapter
 from apps.accounts.models import GoogleProfile
 from tests.factories import UserFactory
 
+
+@pytest.mark.unit
 @pytest.mark.django_db
 class TestSocialAccountAdapter:
+    """Tests para el adaptador de cuentas sociales."""
+
     def test_pre_social_login_allowed_domain(self):
+        """Verifica que se permite login con dominios autorizados."""
         adapter = SocialAccountAdapter()
         request = Mock()
         sociallogin = Mock(spec=SocialLogin)
@@ -19,6 +30,7 @@ class TestSocialAccountAdapter:
         adapter.pre_social_login(request, sociallogin)
 
     def test_pre_social_login_invalid_domain(self):
+        """Verifica que se bloquea login con dominios no autorizados."""
         adapter = SocialAccountAdapter()
         request = Mock()
         request.META = {"HTTP_X_FORWARDED_FOR": "127.0.0.1"}
@@ -30,6 +42,7 @@ class TestSocialAccountAdapter:
             adapter.pre_social_login(request, sociallogin)
 
     def test_populate_user(self):
+        """Verifica que se pueblan los datos del usuario desde Google."""
         adapter = SocialAccountAdapter()
         request = Mock()
         sociallogin = Mock(spec=SocialLogin)
@@ -48,6 +61,7 @@ class TestSocialAccountAdapter:
         assert user.avatar_url == "http://example.com/avatar.jpg"
 
     def test_save_user(self):
+        """Verifica que se guarda el perfil de Google."""
         adapter = SocialAccountAdapter()
         request = Mock()
         sociallogin = Mock(spec=SocialLogin)
@@ -69,3 +83,4 @@ class TestSocialAccountAdapter:
         profile = saved_user.google_profile
         assert profile.google_id == "12345"
         assert profile.email == "test@10code.es"
+

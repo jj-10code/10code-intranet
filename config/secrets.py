@@ -140,7 +140,7 @@ def get_environment() -> str:
     Detecta el entorno actual basado en DJANGO_SETTINGS_MODULE.
 
     Returns:
-        'development', 'production' o 'staging'
+        'testing', 'development', 'production' o 'staging'
     """
     settings_module = os.getenv("DJANGO_SETTINGS_MODULE", "").lower()
 
@@ -148,6 +148,8 @@ def get_environment() -> str:
         return "production"
     elif "staging" in settings_module:
         return "staging"
+    elif "testing" in settings_module or "test" in settings_module:
+        return "testing"
     elif "development" in settings_module or "dev" in settings_module:
         return "development"
     else:

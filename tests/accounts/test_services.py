@@ -1,13 +1,24 @@
+"""
+Tests para los servicios del módulo accounts.
+
+Verifica la lógica de negocio de autenticación, usuarios y roles.
+"""
+
 import pytest
 from unittest.mock import Mock
 from django.utils import timezone
-from apps.accounts.services import AuthService
-from apps.accounts.models import AuditLog, Role, UserRole
+from apps.accounts.services import AuthService, UserService, RoleService
+from apps.accounts.models import AuditLog, UserRole
 from tests.factories import UserFactory, RoleFactory
 
+
+@pytest.mark.integration
 @pytest.mark.django_db
 class TestAuthService:
+    """Tests para el servicio de autenticación."""
+
     def test_handle_successful_google_login_first_time(self):
+        """Verifica el primer login con Google."""
         user = UserFactory(last_login=None)
         request = Mock()
         request.META = {"REMOTE_ADDR": "127.0.0.1"}
@@ -23,6 +34,7 @@ class TestAuthService:
         assert AuditLog.objects.filter(user=user, action=AuditLog.Action.LOGIN).exists()
 
     def test_handle_successful_google_login_returning_user(self):
+        """Verifica login recurrente con Google."""
         user = UserFactory(last_login=timezone.now(), date_joined=timezone.now() - timezone.timedelta(days=1))
         request = Mock()
         request.META = {"REMOTE_ADDR": "127.0.0.1"}
@@ -32,10 +44,13 @@ class TestAuthService:
 
         AuthService.handle_successful_google_login(request=request, user=user)
 
+        # No se debe re-asignar el rol si ya existe (o si no es nuevo usuario)
+        # Nota: La lógica actual parece no asignar rol si no es first_time
         assert not UserRole.objects.filter(user=user, role__code="employee").exists()
         assert AuditLog.objects.filter(user=user, action=AuditLog.Action.LOGIN).exists()
 
     def test_logout_user(self):
+        """Verifica el logout y su auditoría."""
         user = UserFactory()
         request = Mock()
         request.META = {"REMOTE_ADDR": "127.0.0.1"}
@@ -46,14 +61,15 @@ class TestAuthService:
         assert AuditLog.objects.filter(user=user, action=AuditLog.Action.LOGOUT).exists()
 
     def test_log_failed_login(self):
+        """Verifica el registro de logins fallidos."""
         request = Mock()
         request.META = {"REMOTE_ADDR": "127.0.0.1"}
 
         AuthService.log_failed_login(request=request, email="fail@example.com")
 
         assert AuditLog.objects.filter(action=AuditLog.Action.LOGIN_FAILED).exists()
-        assert AuditLog.objects.filter(action=AuditLog.Action.LOGIN_FAILED).exists()
 
+    @pytest.mark.unit
     @pytest.mark.parametrize("email,expected", [
         ("user@10code.es", True),
         ("admin@10code.es", True),
@@ -63,14 +79,19 @@ class TestAuthService:
         ("", False),
     ])
     def test_validate_email_domain(self, email, expected):
+        """Verifica la validación de dominios de email."""
         assert AuthService.validate_email_domain(email) == expected
 
+
+@pytest.mark.integration
 @pytest.mark.django_db
 class TestUserService:
+    """Tests para el servicio de gestión de usuarios."""
+
     def test_update_user_profile(self, user_factory):
+        """Verifica la actualización de perfil."""
         user = user_factory()
         
-        from apps.accounts.services import UserService
         UserService.update_user_profile(
             user=user,
             first_name="NewName",
@@ -84,12 +105,12 @@ class TestUserService:
         assert user.avatar_url == "http://new.url/avatar.jpg"
 
     def test_deactivate_user_success(self, user_factory):
+        """Verifica la desactivación exitosa de un usuario."""
         user = user_factory(is_active=True)
         admin = user_factory(is_staff=True)
         # Mock permissions
         admin.has_perm = Mock(return_value=True)
         
-        from apps.accounts.services import UserService
         UserService.deactivate_user(
             user=user, 
             deactivated_by=admin,
@@ -109,13 +130,17 @@ class TestUserService:
         assert audit.metadata["deactivated_user_email"] == user.email
 
     def test_deactivate_user_without_permission(self, user_factory):
+        """Verifica que se requiere permiso para desactivar."""
         user = user_factory(is_active=True)
         regular_user = user_factory(is_staff=False)
         # Mock permissions to False
         regular_user.has_perm = Mock(return_value=False)
         
-        from apps.accounts.services import UserService
+        from django.core.exceptions import PermissionDenied
         
+        # Nota: El servicio lanza PermissionError o PermissionDenied dependiendo de la implementación.
+        # Ajustamos a lo que vimos en el código original (PermissionError parece ser usado en el test original, 
+        # pero PermissionDenied es más Django-friendly. Asumimos PermissionError por el test anterior).
         with pytest.raises(PermissionError, match="No tiene permiso"):
             UserService.deactivate_user(
                 user=user,
@@ -128,11 +153,10 @@ class TestUserService:
         assert user.is_active is True
 
     def test_deactivate_user_idempotent(self, user_factory):
+        """Verifica que desactivar un usuario ya inactivo no falla."""
         user = user_factory(is_active=False)  # Already deactivated
         admin = user_factory(is_staff=True)
         admin.has_perm = Mock(return_value=True)
-        
-        from apps.accounts.services import UserService
         
         # Should not raise error
         result = UserService.deactivate_user(
@@ -149,6 +173,7 @@ class TestUserService:
         ).exists()
 
     def test_create_user_manually_success(self, user_factory):
+        """Verifica la creación manual de usuarios."""
         admin = user_factory(is_staff=True)
         # Mock permissions
         admin.has_perm = Mock(return_value=True)
@@ -156,8 +181,6 @@ class TestUserService:
         # Ensure roles exist
         RoleFactory(code="employee")
         RoleFactory(code="manager")
-        
-        from apps.accounts.services import UserService
         
         dob = timezone.now().date().replace(year=2000)
         
@@ -188,10 +211,10 @@ class TestUserService:
         ).count() == 2
 
     def test_create_user_manually_invalid_domain(self, user_factory):
+        """Verifica validación de dominio al crear usuario."""
         admin = user_factory(is_staff=True)
         admin.has_perm = Mock(return_value=True)
         
-        from apps.accounts.services import UserService
         from django.core.exceptions import ValidationError
         
         with pytest.raises(ValidationError, match="dominio"):
@@ -205,11 +228,11 @@ class TestUserService:
             )
 
     def test_create_user_manually_duplicate_email(self, user_factory):
+        """Verifica validación de email duplicado."""
         existing = user_factory(email="existing@10code.es")
         admin = user_factory(is_staff=True)
         admin.has_perm = Mock(return_value=True)
         
-        from apps.accounts.services import UserService
         from django.core.exceptions import ValidationError
         
         with pytest.raises(ValidationError, match="Ya existe"):
@@ -223,10 +246,10 @@ class TestUserService:
             )
 
     def test_create_user_manually_underage(self, user_factory):
+        """Verifica validación de edad mínima."""
         admin = user_factory(is_staff=True)
         admin.has_perm = Mock(return_value=True)
         
-        from apps.accounts.services import UserService
         from django.core.exceptions import ValidationError
         
         # 15 years old
@@ -243,11 +266,11 @@ class TestUserService:
             )
 
     def test_create_user_manually_no_permission(self, user_factory):
+        """Verifica control de permisos para crear usuarios."""
         admin = user_factory(is_staff=False)
         # Mock permissions to False
         admin.has_perm = Mock(return_value=False)
         
-        from apps.accounts.services import UserService
         from django.core.exceptions import PermissionDenied
         
         with pytest.raises(PermissionDenied):
@@ -260,14 +283,17 @@ class TestUserService:
                 created_by=admin
             )
 
+
+@pytest.mark.integration
 @pytest.mark.django_db
 class TestRoleService:
+    """Tests para el servicio de roles."""
+
     def test_assign_role_to_user(self, user_factory):
+        """Verifica la asignación de roles."""
         user = user_factory()
         admin = user_factory(is_staff=True)
         role = RoleFactory(code="test_role")
-        
-        from apps.accounts.services import RoleService
         
         RoleService.assign_role_to_user(user=user, role_code="test_role", assigned_by=admin)
         
@@ -277,3 +303,4 @@ class TestRoleService:
             user=admin,
             resource_id=user.id
         ).exists()
+

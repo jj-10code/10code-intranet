@@ -481,7 +481,7 @@ mediafiles/
 .agent/workflows/*
 .agent/
 .claude/
-
+docs/tasks/
 playwright-report/
 
 # Lock files (keep uv.lock in Git!)
