@@ -36,20 +36,20 @@ export default function ProfileShow({ user, permissions, google_data, title }: P
                     </CardHeader>
                     <CardContent className="space-y-8">
                         {/* Sección Avatar */}
-                        <div className="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-6">
+                        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
                             {permissions.can_edit_avatar ? (
                                 <AvatarUpload
                                     currentAvatar={user.avatar_url}
                                     fallback={user.first_name.charAt(0)}
-                                    className="h-24 w-24"
+                                    className="shrink-0"
                                 />
                             ) : (
-                                <div className="h-24 w-24 rounded-full bg-muted flex items-center justify-center text-2xl font-bold">
+                                <div className="h-32 w-32 shrink-0 rounded-full bg-muted flex items-center justify-center text-4xl font-bold">
                                     {user.first_name.charAt(0)}
                                 </div>
                             )}
 
-                            <div className="space-y-1 text-center sm:text-left">
+                            <div className="flex-1 space-y-1 text-center sm:text-left">
                                 <h3 className="text-lg font-medium">{user.first_name} {user.last_name}</h3>
                                 <p className="text-sm text-muted-foreground">{user.email}</p>
                                 <div className="flex flex-wrap gap-2 justify-center sm:justify-start mt-2">

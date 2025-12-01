@@ -33,7 +33,7 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
 
         setIsLoading(true)
 
-        router.post("/profile", {
+        router.post("/profile/", {
             _method: "post",
             avatar: file,
         }, {

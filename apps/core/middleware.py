@@ -15,12 +15,19 @@ class InertiaShareMiddleware:
         
         # Compartir información del usuario autenticado
         if request.user.is_authenticated:
+            # Priorizar avatar subido, luego avatar_url de Google
+            avatar_url = None
+            if hasattr(request.user, 'avatar') and request.user.avatar:
+                avatar_url = request.user.avatar.url
+            elif hasattr(request.user, 'avatar_url') and request.user.avatar_url:
+                avatar_url = request.user.avatar_url
+                
             share(request, auth={
                 'user': {
                     'id': request.user.id,
                     'name': request.user.get_full_name() or request.user.username,
                     'email': request.user.email,
-                    'avatar': None,  # TODO: implementar sistema de avatares
+                    'avatar': avatar_url,
                 },
                 'permissions': []  # TODO: implementar sistema de permisos
             })
