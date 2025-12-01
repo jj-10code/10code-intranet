@@ -311,6 +311,7 @@ class UserService:
         first_name: Optional[str] = None,
         last_name: Optional[str] = None,
         avatar_url: Optional[str] = None,
+        avatar: Optional[Any] = None,
     ) -> User:
         """
         Actualiza perfil básico del usuario.
@@ -319,7 +320,8 @@ class UserService:
             user: Usuario a actualizar
             first_name: Nombre (opcional)
             last_name: Apellidos (opcional)
-            avatar_url: URL del avatar (opcional)
+            avatar_url: URL del avatar (opcional, para externos)
+            avatar: Archivo de imagen (opcional, para subidas)
 
         Returns:
             Usuario actualizado
@@ -334,7 +336,15 @@ class UserService:
             user.last_name = last_name
             updated_fields.append("last_name")
 
-        if avatar_url is not None:
+        if avatar is not None:
+            # Si se sube una nueva imagen, la guardamos en el campo avatar
+            user.avatar = avatar
+            updated_fields.append("avatar")
+            # Opcional: Limpiar avatar_url externo si se prefiere la imagen local
+            # user.avatar_url = None 
+            # updated_fields.append("avatar_url")
+        elif avatar_url is not None:
+            # Si se pasa una URL (ej: Google), la guardamos en avatar_url
             user.avatar_url = avatar_url
             updated_fields.append("avatar_url")
 

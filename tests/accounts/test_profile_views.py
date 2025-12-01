@@ -56,6 +56,35 @@ class TestProfileViews:
         user.refresh_from_db()
         assert user.avatar_url == new_avatar
 
+    def test_profile_update_avatar_file(self, client, user):
+        """
+        POST /profile/ con archivo debe actualizar el avatar.
+        """
+        client.force_login(user)
+        
+        # Crear imagen dummy
+        from io import BytesIO
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+        
+        img_io = BytesIO()
+        img = Image.new('RGB', (100, 100), color='red')
+        img.save(img_io, format='JPEG')
+        img_content = img_io.getvalue()
+        
+        avatar_file = SimpleUploadedFile("avatar.jpg", img_content, content_type="image/jpeg")
+        
+        response = client.post(reverse("profile"), {
+            "avatar": avatar_file
+        })
+
+        assert response.status_code == 302
+        assert response.url == reverse("profile")
+
+        user.refresh_from_db()
+        assert user.avatar
+        assert "avatar.jpg" in user.avatar.name
+
     def test_can_edit_birthday_logic(self, client, user):
         """
         Verificar lógica de can_edit_birthday.

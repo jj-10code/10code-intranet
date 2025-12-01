@@ -28,7 +28,7 @@ def UserSerializer(user: User) -> Dict[str, Any]:
         "email": user.email,
         "first_name": user.first_name,
         "last_name": user.last_name,
-        "avatar_url": user.avatar_url,
+        "avatar_url": user.avatar.url if user.avatar else user.avatar_url,
         "is_active": user.is_active,
         "date_of_birth": user.date_of_birth.isoformat() if user.date_of_birth else None,
         "roles": [r.role.name for r in user.user_roles.all()],

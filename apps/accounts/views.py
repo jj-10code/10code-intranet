@@ -143,15 +143,13 @@ def profile_update(request: HttpRequest) -> HttpResponse:
     from apps.accounts.services import UserService
 
     avatar_url = request.POST.get("avatar_url")
-    
-    # Validar que se envió algo (aunque sea string vacío para borrar?)
-    # El caso de uso parece ser actualizar, no borrar.
-    # Si avatar_url viene, actualizamos.
+    avatar_file = request.FILES.get("avatar")
     
     try:
         UserService.update_user_profile(
             user=request.user,
-            avatar_url=avatar_url
+            avatar_url=avatar_url,
+            avatar=avatar_file
         )
         messages.success(request, "Perfil actualizado correctamente.")
     except Exception as e:

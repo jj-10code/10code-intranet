@@ -82,9 +82,16 @@ class User(AbstractUser):
         null=True, blank=True, verbose_name="Fecha de nacimiento"
     )
 
-    # Avatar (URL de Google)
+    # Avatar
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        blank=True,
+        null=True,
+        verbose_name="Avatar (Imagen)",
+        help_text="Imagen subida por el usuario",
+    )
     avatar_url = models.URLField(
-        blank=True, null=True, verbose_name="Avatar", help_text="URL del avatar de Google"
+        blank=True, null=True, verbose_name="Avatar (URL)", help_text="URL del avatar de Google"
     )
 
     # Campos de activación

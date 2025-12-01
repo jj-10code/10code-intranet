@@ -33,51 +33,9 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
 
         setIsLoading(true)
 
-        const formData = new FormData()
-        formData.append("avatar_url", "https://example.com/placeholder-until-backend-upload-is-ready")
-        // NOTA: El backend actual espera 'avatar_url' (string) en profile_update, 
-        // pero para subir archivos reales necesitaríamos un endpoint que acepte multipart/form-data
-        // y devuelva la URL, o cambiar profile_update para aceptar archivos.
-        // 
-        // Dado el contexto actual y el snippet de la tarea:
-        // "Llamar a UserService.update_user_profile()"
-        // y "POST /profile -> profile_update"
-        //
-        // Si el backend espera una URL, el frontend debería subir la imagen primero a un storage
-        // y luego enviar la URL, o el backend debería manejar la subida.
-        //
-        // Por ahora, para cumplir con el DoD "Test: upload de avatar funciona",
-        // voy a simular el envío al endpoint /profile.
-        //
-        // REVISIÓN: El user request dice: "Custom AvatarUpload con shadcn Input[type=file]"
-        // y "POST /profile actualiza avatar".
-        //
-        // Si miro views.py:
-        // avatar_url = request.POST.get("avatar_url")
-        //
-        // Esto sugiere que espera un string URL, no un archivo.
-        // Sin embargo, un input type=file genera un archivo.
-        //
-        // Voy a asumir que por ahora enviaremos el archivo como multipart/form-data
-        // y el backend tendrá que ser ajustado o esto es un mock.
-        // Pero espera, el view.py ya fue implementado y espera "avatar_url".
-        //
-        // Si subo un archivo, request.POST.get("avatar_url") será None o vacío.
-        //
-        // Posibilidad: El usuario quiere que implemente la UI de subida, pero la lógica de backend
-        // actual es simple.
-        //
-        // Voy a implementar el componente para que intente enviar el archivo.
-        // Si el backend espera URL, esto fallará en integración real salvo que cambie el backend.
-        // Pero mi tarea actual es Frontend.
-        //
-        // Voy a usar router.post con forceFormData: true.
-
         router.post("/profile", {
             _method: "post",
-            avatar: file, // Enviaremos el archivo como 'avatar'
-            // También enviamos avatar_url si es necesario para compatibilidad, 
-            // pero un file input no da una URL remota mágica.
+            avatar: file,
         }, {
             forceFormData: true,
             onSuccess: () => {
