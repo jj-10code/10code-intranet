@@ -58,7 +58,7 @@ class TestViews:
         response = client.get(url, **{'HTTP_X_INERTIA': 'true', 'HTTP_X_INERTIA_VERSION': '1.0'})
         assert response.status_code == 200
         data = response.json()
-        assert data["component"] == "profile/Show"
+        assert data["component"] == "Profile/Show"
         assert data["props"]["user"]["email"] == user.email
 
     def test_users_create_get(self, client, admin_user):

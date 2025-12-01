@@ -100,11 +100,9 @@ def dashboard_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 @require_http_methods(["GET"])
-def profile_view(request: HttpRequest) -> HttpResponse:
+def profile_show(request: HttpRequest) -> HttpResponse:
     """
-    Vista del perfil de usuario.
-
-    Muestra información completa del perfil.
+    Muestra perfil del usuario autenticado.
     """
     user = request.user
 
@@ -115,36 +113,63 @@ def profile_view(request: HttpRequest) -> HttpResponse:
     except Exception:
         google_data = {}
 
-    # Obtener roles con detalles
-    user_roles = [
-        {
-            "code": ur.role.code,
-            "name": ur.role.name,
-            "assigned_at": ur.assigned_at.isoformat(),
-        }
-        for ur in user.user_roles.select_related("role")
-    ]
+    # Helper para permiso de cumpleaños
+    def _can_edit_birthday(u):
+        # Permitir editar solo si no está establecido
+        return u.date_of_birth is None
 
     return render(
         request,
-        "profile/Show",
+        "Profile/Show",
         props={
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "first_name": user.first_name,
-                "last_name": user.last_name,
-                "full_name": user.get_full_name(),
-                "avatar_url": user.avatar_url,
-                "date_joined": user.date_joined.isoformat(),
-                "last_login": user.last_login.isoformat() if user.last_login else None,
-                "is_staff": user.is_staff,
-                "roles": user_roles,
-            },
+            "user": UserSerializer(user),
             "google_data": google_data,
+            "permissions": {
+                "can_edit_avatar": True,
+                "can_edit_birthday": _can_edit_birthday(user),
+            },
             "title": "Mi Perfil - 10Code Intranet",
         },
     )
+
+
+@login_required
+@require_http_methods(["POST"])
+def profile_update(request: HttpRequest) -> HttpResponse:
+    """
+    POST: Actualiza avatar del usuario.
+    """
+    from django.contrib import messages
+    from apps.accounts.services import UserService
+
+    avatar_url = request.POST.get("avatar_url")
+    
+    # Validar que se envió algo (aunque sea string vacío para borrar?)
+    # El caso de uso parece ser actualizar, no borrar.
+    # Si avatar_url viene, actualizamos.
+    
+    try:
+        UserService.update_user_profile(
+            user=request.user,
+            avatar_url=avatar_url
+        )
+        messages.success(request, "Perfil actualizado correctamente.")
+    except Exception as e:
+        messages.error(request, f"Error al actualizar perfil: {e!s}")
+
+    return redirect("profile")
+
+
+@login_required
+def profile_root(request: HttpRequest) -> HttpResponse:
+    """
+    Dispatcher para /profile/
+    GET -> profile_show
+    POST -> profile_update
+    """
+    if request.method == "POST":
+        return profile_update(request)
+    return profile_show(request)
 
 
 @login_required
