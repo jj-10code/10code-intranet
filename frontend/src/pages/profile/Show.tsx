@@ -88,6 +88,10 @@ export default function ProfileShow({ user, permissions, google_data, title }: P
                                         disabled={!permissions.can_edit_birthday}
                                         readOnly={!permissions.can_edit_birthday}
                                         type={permissions.can_edit_birthday ? "date" : "text"}
+                                        onChange={(e) => {
+                                            // TODO: Implement date of birth update
+                                            console.log("Date changed:", e.target.value)
+                                        }}
                                     />
                                     {permissions.can_edit_birthday && (
                                         <p className="text-xs text-muted-foreground">

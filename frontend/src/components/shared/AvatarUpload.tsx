@@ -16,8 +16,14 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log('[AvatarUpload] handleFileChange triggered')
         const file = e.target.files?.[0]
-        if (!file) return
+        console.log('[AvatarUpload] Selected file:', file)
+
+        if (!file) {
+            console.log('[AvatarUpload] No file selected')
+            return
+        }
 
         // Validar tamaño (max 2MB)
         if (file.size > 2 * 1024 * 1024) {
@@ -27,10 +33,12 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
 
         // Validar tipo
         if (!file.type.startsWith("image/")) {
+            console.log('[AvatarUpload] Invalid file type:', file.type)
             toast.error("El archivo debe ser una imagen")
             return
         }
 
+        console.log('[AvatarUpload] Uploading file:', file.name)
         setIsLoading(true)
 
         router.post("/profile/", {
@@ -39,19 +47,30 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
         }, {
             forceFormData: true,
             onSuccess: () => {
+                console.log('[AvatarUpload] Upload successful')
                 toast.success("Avatar actualizado correctamente")
                 setIsLoading(false)
+                // Reset file input to allow re-upload
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
+                    console.log('[AvatarUpload] File input reset')
+                }
             },
             onError: (errors) => {
+                console.error('[AvatarUpload] Upload error:', errors)
                 toast.error("Error al actualizar avatar")
-                console.error(errors)
                 setIsLoading(false)
+                // Reset file input on error too
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = ''
+                }
             },
             onFinish: () => setIsLoading(false)
         })
     }
 
     const triggerClick = () => {
+        console.log('[AvatarUpload] triggerClick called')
         fileInputRef.current?.click()
     }
 
