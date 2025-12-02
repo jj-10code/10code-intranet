@@ -1,5 +1,6 @@
 from inertia import render
 from django.contrib.auth.decorators import login_required
+from django.http import HttpRequest, HttpResponse
 
 
 @login_required
@@ -28,3 +29,13 @@ def help_view(request):
             'avatar': request.user.avatar.url if hasattr(request.user, 'avatar') and request.user.avatar else None,
         }
     })
+
+def handler403(request: HttpRequest, exception=None) -> HttpResponse:
+    """
+    Custom 403 error handler.
+    Renders the Inertia 'Error' page with status 403.
+    """
+    from django.http import HttpResponse
+    response = render(request, 'Error', props={'status': 403})
+    response.status_code = 403
+    return response
