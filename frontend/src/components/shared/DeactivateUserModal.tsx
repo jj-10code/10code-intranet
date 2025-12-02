@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { router } from '@inertiajs/react'
+import { toast } from 'sonner'
 import {
     Dialog,
     DialogContent,
@@ -34,8 +35,12 @@ export function DeactivateUserModal({ user, open, onOpenChange }: DeactivateUser
             { reason },
             {
                 onSuccess: () => {
+                    toast.success('Usuario desactivado exitosamente')
                     onOpenChange(false)
                     setReason('')
+                },
+                onError: () => {
+                    toast.error('Error al desactivar usuario')
                 },
                 onFinish: () => setIsSubmitting(false),
             }

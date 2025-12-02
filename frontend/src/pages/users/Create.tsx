@@ -1,4 +1,5 @@
 import { Head, useForm } from '@inertiajs/react'
+import { toast } from 'sonner'
 import type { FormEvent } from 'react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,16 @@ export default function UserCreate({ available_roles, permissions }: Props) {
 
     function handleSubmit(e: FormEvent) {
         e.preventDefault()
-        post('/users/create')
+        post('/users/create', {
+            onSuccess: () => {
+                toast.success('Usuario creado exitosamente')
+            },
+            onError: (errors) => {
+                toast.error('Error al crear usuario', {
+                    description: Object.values(errors).join(', '),
+                })
+            },
+        })
     }
 
     const handleRoleChange = (roleCode: string, checked: boolean) => {

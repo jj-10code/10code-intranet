@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react'
 import { createRoot } from 'react-dom/client'
+import { Toaster } from 'sonner'
 import '@fontsource/geist-sans/index.css'
 import '@fontsource/geist-mono/index.css'
 import '@fontsource/space-grotesk/index.css'
@@ -27,6 +28,11 @@ createInertiaApp({
     return module
   },
   setup({ el, App, props }) {
-    createRoot(el).render(<App {...props} />)
+    createRoot(el).render(
+      <>
+        <App {...props} />
+        <Toaster position="top-right" richColors closeButton />
+      </>
+    )
   },
 })
