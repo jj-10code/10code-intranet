@@ -48,7 +48,6 @@ export function AvatarUpload({ currentAvatar, fallback, className }: Props) {
             forceFormData: true,
             onSuccess: () => {
                 console.log('[AvatarUpload] Upload successful')
-                toast.success("Avatar actualizado correctamente")
                 setIsLoading(false)
                 // Reset file input to allow re-upload
                 if (fileInputRef.current) {
