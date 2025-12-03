@@ -88,6 +88,7 @@ MIDDLEWARE = [
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Sirve archivos estáticos en producción
     "inertia.middleware.InertiaMiddleware",  # Inertia.js middleware
     "apps.core.middleware.InertiaShareMiddleware",  # Custom Inertia middleware (CSRF)
+    "apps.core.middleware.InertiaFlashMessagesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

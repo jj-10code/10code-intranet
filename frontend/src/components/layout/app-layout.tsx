@@ -1,14 +1,39 @@
-import { Head } from '@inertiajs/react'
+import { Head, usePage } from '@inertiajs/react'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from './app-sidebar'
 import { AppHeader } from './app-header'
 import type { AppLayoutProps } from '@/types/layout'
+import { useEffect } from 'react'
+import { toast } from 'sonner'
+
+interface FlashMessage {
+    type: 'success' | 'error' | 'warning' | 'info'
+    message: string
+}
+
+interface PageProps {
+    flash: FlashMessage[]
+    [key: string]: unknown
+}
 
 export function AppLayout({
     title = '10Code Intranet',
     breadcrumbs,
     children
 }: AppLayoutProps) {
+    const { flash } = usePage<PageProps>().props
+
+    useEffect(() => {
+        if (flash?.length) {
+            flash.forEach(({ type, message }) => {
+                if (type === 'success') toast.success(message)
+                else if (type === 'error') toast.error(message)
+                else if (type === 'warning') toast.warning(message)
+                else toast.info(message)
+            })
+        }
+    }, [flash])
+
     return (
         <>
             <Head title={title} />

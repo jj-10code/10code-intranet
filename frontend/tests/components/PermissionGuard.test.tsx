@@ -6,6 +6,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 // Mock usePage
 vi.mock('@inertiajs/react', () => ({
     usePage: vi.fn(),
+    Link: ({ children, ...props }: any) => <a {...props}>{children}</a>,
 }))
 
 describe('PermissionGuard', () => {

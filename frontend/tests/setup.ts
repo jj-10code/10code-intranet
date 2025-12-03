@@ -20,6 +20,7 @@ vi.mock('@inertiajs/react', () => ({
                     avatar: null,
                 },
             },
+            flash: [],
         },
         url: '/dashboard/',
     })),
@@ -103,4 +104,12 @@ vi.mock('@tabler/icons-react', () => ({
     IconCirclePlusFilled: () => React.createElement('svg', { 'data-testid': 'icon-circle-plus' }),
     IconMail: () => React.createElement('svg', { 'data-testid': 'icon-mail' }),
     IconHelp: () => React.createElement('svg', { 'data-testid': 'icon-help' }),
+    IconCheck: () => React.createElement('svg', { 'data-testid': 'icon-check' }),
 }))
+
+// Mock de pointer capture para Radix UI
+window.HTMLElement.prototype.hasPointerCapture = vi.fn()
+window.HTMLElement.prototype.setPointerCapture = vi.fn()
+window.HTMLElement.prototype.releasePointerCapture = vi.fn()
+window.HTMLElement.prototype.scrollIntoView = vi.fn()
+window.Element.prototype.scrollIntoView = vi.fn()

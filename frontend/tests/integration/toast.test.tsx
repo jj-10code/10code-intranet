@@ -64,6 +64,16 @@ vi.mock('@inertiajs/react', async (importOriginal) => {
     return {
         ...actual,
         Head: ({ title }: { title: string }) => <title>{title}</title>,
+        usePage: () => ({
+            props: {
+                auth: { user: { id: 1, name: 'Test', email: 'test@example.com' } },
+                flash: [],
+                permissions: {
+                    can_assign_roles: true,
+                    'accounts.add_user': true
+                }
+            }
+        }),
         useForm: () => ({
             data: {
                 email: 'test@example.com',

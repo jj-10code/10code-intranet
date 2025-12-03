@@ -75,7 +75,7 @@ describe("AvatarUpload", () => {
 
         await waitFor(() => {
             expect(router.post).toHaveBeenCalledWith(
-                "/profile",
+                "/profile/",
                 expect.objectContaining({
                     _method: "post",
                     avatar: file,

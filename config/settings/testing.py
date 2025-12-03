@@ -21,3 +21,14 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Disable celery
 CELERY_TASK_ALWAYS_EAGER = True
+
+# Use local memory cache for testing
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+    }
+}
+
+# Use cache-based sessions (will use LocMemCache now)
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
